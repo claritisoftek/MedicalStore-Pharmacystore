@@ -11,7 +11,9 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "build": "node --check server.js && node --check web/service.js && node --check web/public/app.js",
-    "test": "node --test web/test/*.test.js"
+    "test": "node --test --test-timeout=60000 web/test/*.test.js",
+    "test:browser": "playwright test --config web/playwright.config.js",
+    "format": "prettier --write server.js \"web/**/*.js\" \"web/public/*.css\" web/public/index.html"
   },
   "dependencies": {
     "exceljs": "4.4.0",
@@ -28,6 +30,7 @@
     }
   },
   "devDependencies": {
-    "@playwright/test": "1.64.1"
+    "@playwright/test": "1.64.1",
+    "prettier": "3.9.10"
   }
 }
