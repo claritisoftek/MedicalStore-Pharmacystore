@@ -13,7 +13,7 @@
 | Request | Files/process |
 |---|---|
 | Business text/printer names | Administration settings; no source changes needed |
-| Business logo | Add a logo file storage/validation design, a settings chooser, PDF and native rendering; not implemented now |
+| Business logo | Admin → Company profile, Replace logo/Remove and Save; code in branding.py, app.py and printing.py |
 | New field on a medicine | Schema migration, Store validation, product dialog, import template/validation, stock display, reports and tests |
 | New report | Add authorized report builder in reports.py, UI entry and date/financial reconciliation tests |
 | Pack/tablet conversion | Design canonical base unit plus purchase/sale conversion and rounding rules before changing quantities |

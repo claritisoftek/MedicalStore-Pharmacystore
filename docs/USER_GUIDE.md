@@ -4,10 +4,10 @@ This guide describes the application after a Windows installer has been built an
 
 ## Installation and first run
 1. Install the correct A4 and thermal printer drivers in Windows; print a Windows test page on each.
-2. Run the supplied tested `PharmacyDesktop-0.1.0-Windows-x64-Setup.exe`. Install under the same Windows account the counter staff will use. The app does not require administrator privileges for a per-user install.
+2. Run the supplied tested `PharmacyDesktop-0.2.0-Windows-x64-Setup.exe`. Install under the same Windows account the counter staff will use. The app does not require administrator privileges for a per-user install.
 3. Open Pharmacy Desktop from the desktop shortcut.
 4. On the first run create a unique Admin username and password of at least 10 characters. Record these securely. No preconfigured password exists.
-5. Open Administration → Business / printing settings and set business name, address, phone, receipt footer, roll width and both printer names. Interface language is English and amounts are PKR.
+5. Open Admin → Company profile and Administration → Printer settings and set business name, address, phone, receipt footer, roll width and both printer names. Interface language is English and amounts are PKR.
 6. Open Windows Printing Preferences for each printer. Set A4 on the report printer and the correct 58/80 mm roll/form on the thermal printer. Run receipt and A4 test prints.
 7. Create a Cashier account under Administration → New user. Staff can change their own passwords from the top bar. Keep Admin credentials with the business owner.
 
@@ -33,14 +33,22 @@ This guide describes the application after a Windows installer has been built an
 6. Print the A4 purchase record or export PDF. Outstanding supplier amount is tracked automatically.
 
 ## Counter sale and receipts
-1. Use a barcode scanner configured as a USB keyboard with Enter suffix, or type a SKU/barcode and press Enter. Alternatively search by name, select a row, and Add selected.
-2. Repeated scans increase quantity. Select a cart line to change quantity/remove it. Clear cart abandons the unsaved cart.
-3. Checkout. Choose a named customer for credit; leave blank for walk-in. Enter any discount and the amount applied to the invoice.
-4. For a cash sale apply exactly the invoice net amount; calculate cash change at the counter before confirming. The program records payment applied, not tender and change.
-5. Complete the sale; stock is allocated from the earliest expiring available batches. Expired or insufficient stock blocks the whole sale.
-6. In the receipt preview choose the thermal printer and 58/80 mm size, then Print. Export PDF is available. The sale is already saved even if printing fails; use Sales → Reprint receipt to avoid recording it twice.
-7. Check Sales for recent invoices. Cashier list shows only that cashier's last 2,000 invoices; Admin sees the last 2,000 overall. This limit is a screen limit, not data deletion or report truncation.
-8. Admin may void an eligible same-day entire sale and restore its stock. The operator handles the cash refund. Earlier-date and partially returned sales need a future returns module; do not enter negative sales.
+1. Scan a barcode in USB keyboard+Enter mode, or type a name/SKU/barcode in the counter search. F2 focuses search. Use the green Add control, double-click a row, or select it and press F3.
+2. The cart stays visible on the right. Use minus/plus or click the quantity number to enter a whole quantity. Remove a line with its trash button. Cart lines scroll separately when long.
+3. Choose Walk-in customer for a fully paid sale, or a named customer to allow credit. Newly added customers appear in the selector.
+4. Enter a discount if needed, then the actual cash/payment received. The app calculates change. For example a PKR 365.00 sale with PKR 500.00 received shows PKR 135.00 change and records PKR 365.00 applied.
+5. Complete sale (F5). Insufficient/expired stock blocks the entire transaction. Named-customer underpayment creates an outstanding balance.
+6. Choose the receipt printer in preview, then Print or Save PDF. The current company logo is included when configured. Printing failure does not unsave the sale: use Sales → Reprint receipt instead of recording it twice.
+7. Cash tender/change is live UI guidance; invoice/payment records and reprinted receipts retain the applied amount. Calculate/hand over change before starting the next sale.
+8. Sales shows the last 2,000 invoices (Cashier: own invoices; Admin: all). This does not delete or truncate report data. Admin can void eligible same-day entire invoices; historical/partial returns remain unsupported.
+
+## Change company branding anytime
+1. Sign in as Admin and choose Company profile at the top right or under Administration.
+2. Replace logo accepts PNG or JPEG up to 5 MB. Choose an image, review its preview, then Save company profile. Cancel leaves the stored logo/profile unchanged.
+3. Edit company name, tagline, address, phone, email and receipt footer in the same dialog. No reinstall is needed; the current cart is retained.
+4. Remove returns to the generic company mark. The fixed medicine app/installer icon remains separate.
+5. Logos are normalized to a portable PNG inside the database. Backups include them; restoring an older backup restores its identity, or the default mark when that snapshot predates a logo.
+6. Updated identity appears in the header and newly generated/reprinted PDFs and printer documents. Existing PDFs already saved to disk do not change.
 
 ## Balances, expenses and reporting
 - Customers/Suppliers show outstanding balances. Admin → Record balance payment records a customer receipt or a supplier payment. Enter only actual money received/paid; overpayment is rejected.

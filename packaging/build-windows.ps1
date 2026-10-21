@@ -14,7 +14,7 @@ New-Item -ItemType Directory -Force build | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
 & $python packaging/collect_licenses.py
 if ($LASTEXITCODE -ne 0) { throw 'Notice collection failed' }
-& $python -m PyInstaller --noconfirm --clean --windowed --onedir --name PharmacyDesktop --collect-all reportlab --collect-all openpyxl --add-data 'build/THIRD_PARTY_NOTICES;THIRD_PARTY_NOTICES' run.py
+& $python -m PyInstaller --noconfirm --clean --windowed --onedir --name PharmacyDesktop --icon assets/pharmacy-icon.ico --add-data 'assets;assets' --collect-all reportlab --collect-all openpyxl --add-data 'build/THIRD_PARTY_NOTICES;THIRD_PARTY_NOTICES' run.py
 if ($LASTEXITCODE -ne 0) { throw 'Executable build failed' }
 $report = Join-Path (Get-Location) 'build\frozen-smoke.json'
 Remove-Item $report -ErrorAction SilentlyContinue

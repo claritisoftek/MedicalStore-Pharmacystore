@@ -3,7 +3,7 @@ from .core import fmt
 def receipt(store,ident):
     s=store.rows('''SELECT s.*,coalesce(p.name,'Walk-in') customer,u.username cashier FROM sales s LEFT JOIN parties p ON p.id=s.customer_id JOIN users u ON u.id=s.user_id WHERE s.id=?''',(ident,))
     if not s: raise ValueError('Sale not found')
-    s=s[0]; lines=[store.get_setting('name','Pharmacy'),store.get_setting('address'),store.get_setting('phone'),f"Receipt #{ident} | {s['status']}",s['created'],f"Customer: {s['customer']}",f"Cashier: {s['cashier']}",'-'*30]
+    s=s[0]; lines=[store.get_setting('name','Pharmacy'),store.get_setting('address'),store.get_setting('phone'),store.get_setting('email'),f"Receipt #{ident} | {s['status']}",s['created'],f"Customer: {s['customer']}",f"Cashier: {s['cashier']}",'-'*30]
     for l in store.rows('''SELECT p.name,b.batch,b.expiry,l.* FROM sale_lines l JOIN batches b ON b.id=l.batch_id JOIN products p ON p.id=b.product_id WHERE l.sale_id=?''',(ident,)):
         lines += [l['name'],f"Batch {l['batch']} Exp {l['expiry']}",f"{l['quantity']} x {fmt(l['price'])} = PKR {fmt(l['quantity']*l['price'])}"]
     lines += ['-'*30,f"Subtotal PKR {fmt(s['subtotal'])}",f"Discount PKR {fmt(s['discount'])}",f"TOTAL PKR {fmt(s['total'])}",f"Paid PKR {fmt(s['paid'])}",f"Due PKR {fmt(s['total']-s['paid'])}",store.get_setting('footer','Thank you')]
@@ -12,7 +12,7 @@ def receipt(store,ident):
 def vendor_bill(store,ident):
     p=store.rows('''SELECT x.*,p.name,p.phone,p.address FROM purchases x JOIN parties p ON p.id=x.supplier_id WHERE x.id=?''',(ident,))
     if not p: raise ValueError('Purchase not found')
-    p=p[0]; lines=[store.get_setting('name','Pharmacy'),f"Purchase #{ident} | Vendor ref: {p['reference']}",p['created'],p['name'],p['phone'],p['address'],'']
+    p=p[0]; lines=[store.get_setting('name','Pharmacy'),store.get_setting('address'),store.get_setting('phone'),store.get_setting('email'),f"Purchase #{ident} | Vendor ref: {p['reference']}",p['created'],p['name'],p['phone'],p['address'],'']
     for b in store.rows('SELECT b.*,p.name FROM batches b JOIN products p ON p.id=b.product_id WHERE b.purchase_id=?',(ident,)):
         lines += [f"{b['name']} | Batch {b['batch']} | Exp {b['expiry']}",f"{b['original_quantity']} x PKR {fmt(b['cost'])} = PKR {fmt(b['original_quantity']*b['cost'])}"]
     lines += [f"Total PKR {fmt(p['total'])}",f"Paid at purchase PKR {fmt(p['paid'])}",f"Due at purchase PKR {fmt(p['total']-p['paid'])}"]

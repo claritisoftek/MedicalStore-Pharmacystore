@@ -1,11 +1,15 @@
-# Pharmacy Desktop — 0.1.0
+# Pharmacy Desktop — 0.2.0
 
 Independent offline pharmacy desktop implementation, prepared for Windows 10/11 x64.
 [Build status](https://github.com/claritisoftek/MedicalStore-Pharmacystore/actions/workflows/build-windows.yml) | [Download installer and full release](https://github.com/claritisoftek/MedicalStore-Pharmacystore/releases)
 
 Release publication is gated on automated Windows domain tests, frozen application and installed application checks, installation and uninstallation on Windows Server 2022. Evidence is attached to the release. Physical printer/scanner checks and interactive Windows 10/11 acceptance remain necessary on the delivery machine.
 
-## Requested behavior implemented in source
+## Modern desktop release
+
+The customer-selected Warm Dispensary design uses warm ivory and forest green, horizontal navigation, a persistent cart, live cash/change calculation and a medicine application/installer icon. **Admin → Company profile** can replace/remove the company logo and edit name, tagline, address, phone, email and receipt footer without reinstalling. PNG/JPEG logos are stored in the database, backed up/restored, and included on PDFs/native printouts.
+
+## Included behavior
 - Empty business database; create the first Admin at initial launch, no default password.
 - Admin and Cashier roles; password changes; account creation; audit trail.
 - Medicine catalogue, categories, barcode lookup/scanning, batch inventory, expiry and low-stock indications.
@@ -15,7 +19,7 @@ Release publication is gated on automated Windows domain tests, frozen applicati
 - Validated .xlsx opening inventory import with preview, atomic apply and duplicate-file rejection.
 - Manual SQLite snapshot backups and validated full restore with automatic pre-restore backup.
 - A4/58mm/80mm PDF export; Windows native printing to installed printer drivers.
-- Generic English UI and PKR; pharmacy name/address/phone/footer and printer choices are editable.
+- Generic English UI and PKR; pharmacy name, logo, tagline, address, phone, email, footer and printer choices are editable.
 
 ## Current limits that affect delivery
 - Single local workstation only. LAN mode is a documented future extension, not an enabled feature.
@@ -41,10 +45,10 @@ Install Python 3.12 x64 and Inno Setup 6 **on the developer/build computer only*
 ```
 powershell -ExecutionPolicy Bypass -File packaging\build-windows.ps1
 ```
-The script installs pinned dependencies, runs tests, creates a bundled executable directory, runs its smoke test, and builds `release/PharmacyDesktop-0.1.0-Windows-x64-Setup.exe`.
+The script installs pinned dependencies, runs tests, creates a bundled executable directory, runs its smoke test, and builds `release/PharmacyDesktop-0.2.0-Windows-x64-Setup.exe`.
 The customer does not need Python, PHP, MySQL, Excel, a browser or an internet connection for the compiled application. Windows printer drivers are required for physical printing.
 
-Pushes to main and manual workflow dispatch build and publish the Windows release. Release assets include the installer, portable app, matching source, documentation, checksums and evidence. The workflow does not overwrite existing v0.1.0 assets; bump version references before subsequent releases.
+Pushes to main and manual workflow dispatch build and publish the Windows release. Release assets include the installer, portable app, matching source, documentation, checksums and evidence. The workflow does not overwrite existing v0.2.0 assets; bump version references before subsequent releases.
 
 ## Documentation index
 - [Customer operation and backup guide](docs/USER_GUIDE.md)
@@ -61,3 +65,7 @@ All customer records are under `%LOCALAPPDATA%\PharmacyDesktop\` for the Windows
 ## Licence
 
 The repository's existing [GNU GPL v3](LICENSE) is preserved. Matching application source is published with the release. Third-party libraries retain their own licences.
+
+## Upgrade from v0.1.0
+
+Create a backup, close the app and run the v0.2.0 installer under the same Windows account. AppId, install path, data folder and schema version remain unchanged; existing accounts and records are retained. No demonstration business data are installed. See [design QA](design-qa.md) and [branding/upgrade guide](docs/BRANDING_AND_UPGRADE.md).

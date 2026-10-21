@@ -2,7 +2,7 @@ name: Build and release Windows installer
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, ui/modern-dispensary]
 permissions:
   contents: read
 concurrency:
@@ -30,6 +30,11 @@ jobs:
       - name: Test and build standalone Windows installer
         shell: powershell
         run: ./packaging/build-windows.ps1
+      - name: Native interface interactions and screenshots
+        shell: powershell
+        env:
+          PYTHONPATH: .
+        run: ./.venv/Scripts/python.exe packaging/capture_ui.py build/screenshots
       - name: Test installed application and uninstaller
         shell: powershell
         run: ./packaging/test-installer.ps1
@@ -45,9 +50,11 @@ jobs:
             build/*smoke.json
             build/test-results.txt
             build/build-provenance.json
+            build/screenshots/*
             release/*
           if-no-files-found: warn
-      - name: Publish v0.1.0 release
+      - name: Publish v0.2.0 release
+        if: github.ref == 'refs/heads/main'
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}

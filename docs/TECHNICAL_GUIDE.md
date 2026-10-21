@@ -8,6 +8,7 @@
 | SQLite | Bundled Python sqlite3 runtime version | Local transactional database; WAL, FK enforcement, synchronous FULL |
 | openpyxl | 3.1.5 | Read/write .xlsx without Microsoft Excel |
 | ReportLab | 4.4.9 | Offline PDF reports and receipts |
+| Pillow | 13.0.0 | Local company logo validation, ImageTk assets and printer image drawing |
 | pywin32 | 311, Windows only | Enumerate printers and GDI printing |
 | PyInstaller | 6.22.3 | Bundle Python, Tcl/Tk, libraries into standalone app directory |
 | Inno Setup | 6 on builder | Per-user Windows installation and uninstall |
@@ -18,6 +19,8 @@ The listed application/library versions are pinned in requirements files. The bu
 ## Module map
 - `run.py`: normal launch or packaged `--self-test REPORT_PATH`.
 - `pharmacy/core.py`: schema, local paths, validation, authentication, authorization, purchases, batch allocation, sales, voids, balances, expenses, settings, snapshots/restore.
+- `pharmacy/theme.py`: warm ivory/forest tokens, native font selection and bundled asset paths.
+- `pharmacy/branding.py`: bounded PNG/JPEG validation, EXIF stripping/normalization, database logo storage and Admin profile writes.
 - `pharmacy/app.py`: Tk UI, dialogs, counter cart, purchase cart, lists, previews, data entry, printer selection.
 - `pharmacy/excel.py`: XLSX template, strict validation/preview, atomic opening-stock apply.
 - `pharmacy/reports.py`: receipt, purchase bill and date-range report text generation.
@@ -38,7 +41,7 @@ Do not put the live database on OneDrive/network shares/removable media. A futur
 |---|---|---|
 | meta | version | Migration version (exactly 1 for this release) |
 | users | id, username UNIQUE, password, role, active | Salted PBKDF2 credentials, Admin/Cashier |
-| settings | key PK, value | Business text, thermal roll and preferred printers |
+| settings | key PK, value | Business text, base64 normalized logo_png, thermal roll and preferred printers |
 | products | id, sku UNIQUE, name, barcode UNIQUE nullable, category, price, reorder, active | Medicine and whole sale unit |
 | parties | id, kind, name, phone, address | Customer or supplier |
 | purchases | id, created, supplier_id→parties, reference, total, paid | Vendor invoice header |
@@ -71,3 +74,10 @@ The database itself is not encrypted. Windows file permissions protect local rec
 
 ## Printing
 Windows integration enumerates installed printers, creates a printer DC, uses a fixed-width font, wraps to printable width and paginates to the driver's current printable height. Application paper choice affects font/PDF sizing; native hardware paper/form selection remains the driver's configured preference. No silent default PDF-viewer dependency exists. PDF generation is wholly local; ordinary report text uses ReportLab's built-in font (English only).
+
+## v0.2.0 UI/branding implementation
+The existing Tk desktop runtime and SQLite schema version 1 are retained. Horizontal navigation raises existing page frames, so old accounting workflows are preserved. Counter uses a medicine Treeview with real Add buttons, a scrollable editable cart and bottom-reserved payment controls. Company profile scrolls independently with pinned Save/Cancel buttons. Minimum supported client size is 1080 × 680. Windows font selection prefers installed Segoe UI; Linux validation selects an available sans-serif font. Cash tender maps to min(received, net total) applied to Store.sell; extra is change, never an overpayment entry. Tender/change are not separate persisted fields.
+
+Logo data is stored in settings.logo_png as base64 PNG, with no separate external file dependencies or new database tables. Input is limited to PNG/JPEG, 5 MB and 12 million pixels, converted to RGBA PNG and resized within 512 × 512; conversion strips input metadata. Profile text and a changed logo save in one Store.settings transaction. Omitted logo preserves the existing one; empty logo removes it. UI header refresh does not rebuild the cart. Snapshot backup/restore therefore carries the company identity automatically and old v0.1.0 snapshots remain compatible.
+
+Application assets are bundled under assets through PyInstaller; pharmacy-icon.ico is used for executable and Inno Setup. Tabler outline raster icons and original generated branding asset provenance are documented in ASSETS.md. Runtime customer machines do not need CairoSVG, icon network calls, web fonts or a browser.

@@ -1,5 +1,19 @@
 # Changes and decision log
 
+## 0.2.0 — Warm Dispensary UI and editable company identity
+
+- Implemented the user-selected third visual concept in the existing offline native app.
+- Replaced top notebook tabs with warm ivory/forest horizontal navigation, clearer headings and consistent controls.
+- Persistent medicine cart with editable quantities, green Add controls, live subtotal/discount/payment/change, keyboard shortcuts and true empty states.
+- Added original medicine capsule application/executable/installer icon and generic leafy company mark; standard Tabler icons with licence.
+- Added Admin company profile with bounded PNG/JPEG logo upload/preview/removal, name/tagline/address/phone/email/footer, immediate header refresh and branded PDF/native printing.
+- Stored normalized logo inside existing settings table so backup/restore and v0.1.0 compatibility require no schema migration.
+- Added eight branding regression tests, native interaction/screenshot checks, frozen company-profile/asset checks and source visual comparison.
+- Visual iterations corrected missing font fallback, footer reservation, medicine-row icon spacing, Add affordances and minimum-viewport cart visibility.
+- Kept AppId, install path and data location stable for upgrade. Bumped software, installer and release to 0.2.0; v0.1.0 assets remain untouched.
+- Updated user/developer/build/branding/upgrade/design-QA documentation and release evidence packaging.
+
+
 ## 0.1.0 — 2026-10-21 — development source handover
 
 ### Scope confirmed

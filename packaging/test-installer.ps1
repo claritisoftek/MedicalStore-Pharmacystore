@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
-$installer = (Resolve-Path 'release\PharmacyDesktop-0.1.0-Windows-x64-Setup.exe').Path
+$installer = (Resolve-Path 'release\PharmacyDesktop-0.2.0-Windows-x64-Setup.exe').Path
 $smokeRoot = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
 $installPath = Join-Path $smokeRoot 'PharmacyDesktop-Installer-Smoke'
 if (Test-Path $installPath) { throw "Use a fresh installer smoke directory: $installPath" }
