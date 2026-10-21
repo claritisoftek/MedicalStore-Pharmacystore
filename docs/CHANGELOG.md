@@ -36,3 +36,6 @@ Automated tests passed on Linux; see TEST_RESULTS.md for exact count and scope. 
 
 ### Repository publication and Windows release automation
 Published to the customer-selected `claritisoftek/MedicalStore-Pharmacystore` repository, preserving its existing GPL-3.0 licence. Added main-branch Windows builds, frozen and installed executable smoke checks, silent installer/uninstaller verification, source/portable/documentation packaging, dependency provenance, checksums and gated GitHub Release creation. Windows outcomes are recorded in release evidence rather than inferred from Linux tests. Physical printer verification remains pending on customer hardware.
+
+### Windows release check correction
+The first Windows build passed 22 tests, frozen and installed application smoke checks, installer compilation and uninstallation. Publication failed because Windows PowerShell treated the expected `gh release view` "release not found" stderr as terminating. Moved release probing/publication into a Python subprocess wrapper, preserving refusal to overwrite an existing release and distinguishing authentication/API errors from an absent release.
