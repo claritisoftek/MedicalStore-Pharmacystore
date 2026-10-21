@@ -3,6 +3,7 @@ import tempfile,sys,json,time
 from pathlib import Path
 from datetime import date,timedelta
 from PIL import ImageGrab
+from tkinter import font as tkfont
 from pharmacy.core import Store
 from pharmacy.app import App
 from pharmacy import branding
@@ -10,7 +11,11 @@ from pharmacy import branding
 def capture(app,path):
     app.update(); app.lift(); app.update_idletasks(); time.sleep(.15); app.update()
     x,y=app.winfo_rootx(),app.winfo_rooty()
-    ImageGrab.grab(bbox=(x,y,x+app.winfo_width(),y+app.winfo_height())).save(path)
+    image=ImageGrab.grab(bbox=(x,y,x+app.winfo_width(),y+app.winfo_height())); image.save(path)
+    path=Path(path); info_path=path.parent/'render-info.json'; info=json.loads(info_path.read_text()) if info_path.exists() else {}
+    family=getattr(app,'font_family',getattr(app.master,'font_family','Segoe UI'))
+    info[path.name]={'client':[app.winfo_width(),app.winfo_height()],'image_pixels':list(image.size),'tk_scaling':float(app.tk.call('tk','scaling')),'font':tkfont.Font(root=app,font=(family,11)).actual(),'screen':[app.winfo_screenwidth(),app.winfo_screenheight()]}
+    info_path.write_text(json.dumps(info,indent=2))
 
 def prepare_display():
     if sys.platform!='win32': return
@@ -54,7 +59,7 @@ def run(folder):
             app.print_dialog=original_print
             app.cart=[dict(product_id=ids[0],quantity=10),dict(product_id=ids[1],quantity=2)]; app.refresh_cart(); app.tender_var.set('365.00')
             app.geometry('1080x680+0+0'); app.update()
-            app.cart_canvas.event_generate('<MouseWheel>',delta=-120); app.update(); assert app.cart_canvas.yview()[0]>0, 'Cart scroll must work over child controls'
+            app.cart_lines.winfo_children()[0].event_generate('<MouseWheel>',delta=-120); app.update(); assert app.cart_canvas.yview()[0]>0, 'Cart scroll must work over child controls'
             app.cart_canvas.yview_moveto(0); app.update(); capture(app,folder/'counter-1080.png')
             assert app.cart_canvas.winfo_height()>=80, 'Cart needs a visible editable line at minimum viewport'
             assert app.complete_button.winfo_rooty()+app.complete_button.winfo_height() <= app.winfo_rooty()+app.winfo_height()
