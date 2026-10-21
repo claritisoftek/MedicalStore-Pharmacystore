@@ -93,3 +93,18 @@ test("Excel validation rejects formulas and expired inventory", async () => {
   buffer = Buffer.from(await book.xlsx.writeBuffer());
   await assert.rejects(() => service.importRows(buffer), /Formulas/);
 });
+
+test("Logo uploads cannot disguise SVG as PNG", async () => {
+  const service = new Service(null);
+  const svg = Buffer.from(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"></svg>',
+  );
+  await assert.rejects(
+    () =>
+      service.profile(
+        { id: 1 },
+        { logo: "data:image/png;base64," + svg.toString("base64") },
+      ),
+    /Only actual PNG/,
+  );
+});

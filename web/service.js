@@ -333,6 +333,11 @@ export class Service {
         Number.isSafeInteger(subtotal) && subtotal <= 1e13,
         "Sale total too large",
       );
+      if (v.expected_subtotal !== undefined)
+        assert(
+          v.expected_subtotal === subtotal,
+          "Catalogue prices changed. Refresh records and review this cart before retrying.",
+        );
       const discount = money(v.discount),
         tender = money(v.tender);
       assert(discount <= subtotal, "Discount exceeds subtotal");

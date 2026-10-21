@@ -24,7 +24,30 @@ test("Counter, print receipt, admin forms, responsive layout and logout", async 
     path: "web/test-output/screenshots/counter-desktop.png",
     fullPage: true,
   });
+  const beforeSales = (await (await page.request.get("/api/state")).json())
+    .sales.length;
+  let interrupted = false;
+  await page.route("**/api/sales", async (route) => {
+    if (!interrupted) {
+      interrupted = true;
+      await route.fetch();
+      await route.fulfill({
+        status: 502,
+        contentType: "text/html",
+        body: "Upstream interrupted",
+      });
+    } else await route.continue();
+  });
   await page.getByRole("button", { name: "Complete sale" }).click();
+  await expect(page.locator("#checkout-error")).toContainText("interrupted");
+  await page.getByRole("button", { name: "Complete sale" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Sales", exact: true }),
+  ).toBeVisible();
+  expect(
+    (await (await page.request.get("/api/state")).json()).sales.length,
+  ).toBe(beforeSales + 1);
+  await page.unroute("**/api/sales");
   await expect(
     page.getByRole("heading", { name: "Sales", exact: true }),
   ).toBeVisible();

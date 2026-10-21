@@ -1,13 +1,15 @@
 import { defineConfig } from "@playwright/test";
+import { fileURLToPath } from "node:url";
 export default defineConfig({
   testDir: "./browser",
   workers: 1,
   timeout: 45000,
   use: { baseURL: "http://127.0.0.1:3000", trace: "retain-on-failure" },
   reporter: "list",
-  outputDir: "./test-output",
+  outputDir: "./test-output/results",
   webServer: {
     command: "node server.js",
+    cwd: fileURLToPath(new URL("..", import.meta.url)),
     url: "http://127.0.0.1:3000/health",
     reuseExistingServer: false,
     env: {

@@ -189,6 +189,18 @@ test(
       await t.test(
         "Insufficient stock rolls back; concurrent requests cannot oversell",
         async () => {
+          assert.equal(
+            (
+              await request("/api/sales", {
+                request_key: randomUUID(),
+                lines: [{ product_id: pid, quantity: 1 }],
+                expected_subtotal: 1,
+                discount: "0",
+                tender: "100",
+              })
+            ).res.status,
+            400,
+          );
           const before = (
             await rows(pool, "SELECT SUM(quantity) n FROM batches")
           )[0].n;

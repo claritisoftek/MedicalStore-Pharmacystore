@@ -579,3 +579,13 @@ dialog::backdrop {
     padding: 20px;
   }
 }
+
+/* Allow catalogue tables and long labels to scroll inside narrow layouts. */
+.counter > section,
+.cart {
+  min-width: 0;
+}
+.cart-line strong,
+.company strong {
+  overflow-wrap: anywhere;
+}

@@ -416,6 +416,7 @@ async function checkout(button) {
     requestKey = requestKey || crypto.randomUUID();
     pendingSale = {
       request_key: requestKey,
+      expected_subtotal: totals().subtotal,
       lines: cart.map((l) => ({ ...l })),
       customer_id: $("[name=customer]").value || null,
       discount: $("[name=discount]").value,
