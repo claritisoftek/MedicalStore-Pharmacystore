@@ -28,7 +28,7 @@ The initial source was verified on Linux/Python 3.12. The repository now builds 
 2. A push to main or manual workflow dispatch runs `.github/workflows/build-windows.yml` on Windows Server 2022.
 3. The workflow runs the builder, silently installs the resulting installer, runs the installed executable self-test and uninstalls it.
 4. It assembles portable, source and documentation archives, records dependency/runtime provenance and computes SHA256SUMS.txt.
-5. Only after success it creates GitHub release v0.2.0 targeting the exact build commit and uploads assets. Existing releases are never overwritten automatically. Change all version/tag references before a subsequent release.
+5. Push builds and manual runs with `publish_release` unchecked only validate and retain packages as workflow artifacts. To publish a new version, first change all version/tag references to an unused release version, then use Actions → Build and release Windows installer → Run workflow on main and check `publish_release`. Only after all checks pass does publication create the release targeting the exact build commit. Existing releases are never overwritten automatically.
 6. Physical printer and clean Windows 10/11 acceptance remain required. CI does not send printer jobs.
 7. Build evidence is also retained as an Actions artifact even if later publication fails.
 
@@ -46,4 +46,7 @@ Record release tag/commit, Python patch version, `python -m pip freeze`, tool/co
 Keep AppId stable. Data stays outside the install directory and must not be overwritten by installer files. Before future schema changes, implement tested, versioned migrations with a pre-migration backup. Never ship a new version with ad-hoc schema changes or reset a customer's live database.
 
 ## v0.2.0 design release gate
-The ui/modern-dispensary branch runs Windows builds and screenshot checks without publishing a release. Review native screenshots against docs/design/selected-reference.jpg, update design-qa.md, then fast-forward main to the verified change. Main builds the release again; publication requires `final result: passed`. Assets, logs, screenshots, interaction results and exact commit provenance are retained.
+The ui/modern-dispensary branch runs Windows builds and screenshot checks without publishing a release. Review native screenshots against docs/design/selected-reference.jpg, update design-qa.md, then fast-forward main to the verified change. Main builds the packages again; manual publication requires `publish_release` checked and `final result: passed`. Assets, logs, screenshots, interaction results and exact commit provenance are retained.
+
+## Repeating tests after a release
+Use Run workflow on the current main branch with `publish_release` unchecked. This repeats domain, frozen-app, native UI, installer and uninstall checks without attempting to recreate the existing release. A rerun of an older failed run still uses that run's original commit; select a fresh main run to test current fixes. This separation was added after v0.2.0 so routine verification cannot fail merely because its release tag already exists.

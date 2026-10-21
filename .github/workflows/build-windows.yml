@@ -1,6 +1,12 @@
 name: Build and release Windows installer
 on:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish a new version after all checks pass (requires an unused release tag)'
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [main, ui/modern-dispensary]
 permissions:
@@ -54,7 +60,7 @@ jobs:
             release/*
           if-no-files-found: warn
       - name: Publish v0.2.0 release
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
