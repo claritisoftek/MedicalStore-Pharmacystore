@@ -6,7 +6,8 @@ if 'final result: passed' not in Path('design-qa.md').read_text(encoding='utf-8'
 repo=os.environ['GITHUB_REPOSITORY']; commit=os.environ['GITHUB_SHA']; tag='v0.2.0'
 probe=subprocess.run(['gh','release','view',tag,'--repo',repo],capture_output=True,text=True)
 if probe.returncode==0:
-    raise SystemExit('v0.2.0 already exists. Bump the version; published assets are never overwritten automatically.')
+    print(f'::notice::Release {tag} already exists; publication skipped. Existing assets are unchanged. New build packages are retained in the workflow artifacts. Use a new version to publish an update.')
+    raise SystemExit(0)
 if 'release not found' not in (probe.stdout+probe.stderr).lower():
     raise SystemExit('Unable to verify release absence: '+probe.stderr.strip())
 assets=[str(p.resolve()) for p in sorted(Path('release').iterdir()) if p.is_file()]

@@ -50,3 +50,5 @@ The ui/modern-dispensary branch runs Windows builds and screenshot checks withou
 
 ## Repeating tests after a release
 Use Run workflow on the current main branch with `publish_release` unchecked. This repeats domain, frozen-app, native UI, installer and uninstall checks without attempting to recreate the existing release. A rerun of an older failed run still uses that run's original commit; select a fresh main run to test current fixes. This separation was added after v0.2.0 so routine verification cannot fail merely because its release tag already exists.
+
+If `publish_release` is checked for an already published version, the publisher emits a notice and successfully skips publication. It does not overwrite existing release assets; newly built packages remain workflow artifacts. Authentication, network, missing-package and actual publication errors still fail the job. An artifact's `sha256:` digest identifies its ZIP bytes and is not an error message. Run 39652439966 passed every build/test stage but failed its old existing-release guard; that guard is now safe to repeat.
