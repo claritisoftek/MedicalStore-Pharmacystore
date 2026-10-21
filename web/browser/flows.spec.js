@@ -1,0 +1,19 @@
+import {test,expect} from '@playwright/test';
+import {mkdir} from 'node:fs/promises';
+test('Counter, print receipt, admin forms, responsive layout and logout',async({page,context})=>{
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.setViewportSize({width:1440,height:1000});await page.goto('/');
+  await page.getByLabel('Username',{exact:true}).fill('Admin');await page.getByLabel('Password',{exact:true}).fill('test-password');await page.getByRole('button',{name:'Sign in',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'A little care. A better day.'})).toBeVisible();
+  await page.locator('#search').fill('IMPORTED');await page.getByRole('button',{name:'+ Add',exact:true}).click();
+  await expect(page.locator('#cart-lines')).toContainText('Imported medicine');
+  await page.getByLabel('Cash received (PKR)',{exact:true}).fill('100');await expect(page.locator('#change')).toContainText('90.00 change');
+  await mkdir('web/test-output/screenshots',{recursive:true});await page.screenshot({path:'web/test-output/screenshots/counter-desktop.png',fullPage:true});
+  await page.getByRole('button',{name:'Complete sale'}).click();await expect(page.getByRole('heading',{name:'Sales',exact:true})).toBeVisible();
+  const receiptPromise=context.waitForEvent('page');await page.getByRole('link',{name:'Print',exact:true}).first().click();const receipt=await receiptPromise;await expect(receipt.getByRole('heading',{name:'Customer receipt'})).toBeVisible();await receipt.close();
+  await page.getByRole('button',{name:'Administration',exact:true}).click();await page.getByRole('button',{name:'Company profile & logo'}).click();await expect(page.getByRole('heading',{name:'Company profile',exact:true})).toBeVisible();await page.screenshot({path:'web/test-output/screenshots/company-profile.png'});await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  await page.getByRole('button',{name:'Purchases',exact:true}).click();await page.getByRole('button',{name:'New vendor bill'}).click();await page.getByLabel('Vendor bill reference').fill('UI-PREVIEW');await page.getByLabel('Batch',{exact:true}).fill('UI-BATCH');await page.getByLabel('Expiry',{exact:true}).fill('2099-01-01');await page.getByRole('button',{name:'Add batch to bill'}).click();await expect(page.locator('#purchase-lines')).toContainText('UI-BATCH');await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  await page.getByRole('button',{name:'Reports',exact:true}).click();await page.getByRole('button',{name:'Generate report'}).click();await expect(page.locator('#report-result')).toContainText('Sales revenue');
+  await page.getByRole('button',{name:'Counter',exact:true}).click();await page.setViewportSize({width:390,height:844});await page.screenshot({path:'web/test-output/screenshots/counter-mobile.png',fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page.getByRole('button',{name:'Sign in',exact:true})).toBeVisible();expect(errors).toEqual([]);
+});

@@ -1,0 +1,1 @@
+document.querySelector('#print').addEventListener('click',()=>window.print());document.querySelector('#paper').addEventListener('change',e=>{const url=new URL(location.href);url.searchParams.set('size',e.target.value);location.href=url;});

@@ -1,3 +1,7 @@
+# Browser edition — 1.0.0
+
+Added Hostinger-ready Express/MySQL application, authenticated responsive UI, transactional pharmacy workflows, MySQL sessions, web Excel import, browser print layouts and web JSON backups. Desktop v0.2.0 remains independently supported. See HOSTINGER_WEB.md for changes, security, deployment and limitations.
+
 # Changes and decision log
 
 ## 0.2.0 — Warm Dispensary UI and editable company identity

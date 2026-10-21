@@ -1,4 +1,14 @@
-# Pharmacy Desktop — 0.2.0
+# Pharmacy — Web and Windows desktop
+
+## Hostinger browser application
+
+The repository root now contains a real **Express + MySQL** application with `package.json` and `package-lock.json`. In Hostinger select **Express**, root **/**, Node **22**, build `npm run build`, start `npm start` (entry file `server.js`). Configure the database and private first-Admin setup token before starting. This is a server application, not a static site.
+
+**[Hostinger deployment, environment settings and web user/developer guide](docs/HOSTINGER_WEB.md)** · [Web test workflow](https://github.com/claritisoftek/MedicalStore-Pharmacystore/actions/workflows/test-web.yml)
+
+The web version includes login/roles, counter and FEFO stock allocation, purchases, balances/payments, expenses/reports, opening-stock Excel import, branded browser printing and web backup/restore. It uses a separate MySQL database; it does not synchronize with the desktop SQLite database. It requires internet. No default credentials or sample business records are shipped.
+
+## Windows desktop — 0.2.0
 
 Independent offline pharmacy desktop implementation, prepared for Windows 10/11 x64.
 [Build status](https://github.com/claritisoftek/MedicalStore-Pharmacystore/actions/workflows/build-windows.yml) | [Download installer and full release](https://github.com/claritisoftek/MedicalStore-Pharmacystore/releases)
@@ -48,7 +58,7 @@ powershell -ExecutionPolicy Bypass -File packaging\build-windows.ps1
 The script installs pinned dependencies, runs tests, creates a bundled executable directory, runs its smoke test, and builds `release/PharmacyDesktop-0.2.0-Windows-x64-Setup.exe`.
 The customer does not need Python, PHP, MySQL, Excel, a browser or an internet connection for the compiled application. Windows printer drivers are required for physical printing.
 
-Pushes to main and manual workflow dispatch build and publish the Windows release. Release assets include the installer, portable app, matching source, documentation, checksums and evidence. The workflow does not overwrite existing v0.2.0 assets; bump version references before subsequent releases.
+Pushes to main and manual workflow dispatch build/test the Windows packages. Publishing a new Windows release is an explicit manual option. Release assets include the installer, portable app, matching source, documentation, checksums and evidence. The workflow does not overwrite existing v0.2.0 assets; bump version references before subsequent releases.
 
 ## Documentation index
 - [Customer operation and backup guide](docs/USER_GUIDE.md)

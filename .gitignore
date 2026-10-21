@@ -8,3 +8,9 @@ release/
 *.sqlite3-wal
 *.sqlite3-shm
 *.spec
+
+node_modules/
+.env
+.env.*
+!.env.example
+web/test-output/
