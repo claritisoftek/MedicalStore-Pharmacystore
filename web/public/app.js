@@ -15,7 +15,8 @@ const amount = (n) =>
     maximumFractionDigits: 2,
   });
 const money = (n) => "PKR " + amount(n),
-  icon = (n) => `<img src="/assets/icons/${n}.png" alt="">`;
+  icon = (n, cls = "") =>
+    `<img class="${cls}" src="/assets/icons/${n}.png" alt="">`;
 let state,
   csrf = "",
   page = "Counter",
@@ -153,7 +154,7 @@ function render() {
 function renderPage() {
   const node = $("#page-content");
   if (page === "Counter") {
-    node.innerHTML = `<div class="counter"><section><h2>Find a medicine</h2><form id="search-form" class="search"><label class="muted" for="search">Search name, SKU or scan a barcode and press Enter</label><input id="search" placeholder="Search or scan a medicine…" autocomplete="off"></form><div id="medicines"></div></section><aside class="cart"><h2>Current sale <small id="cart-count"></small></h2>${select("customer", "Customer", [["", "Walk-in customer"], ...partyOptions("Customer")])}<div class="cart-lines" id="cart-lines"></div><div class="payment"><div class="pair"><span>Subtotal</span><strong id="subtotal"></strong></div><div class="two">${field("discount", "Discount (PKR)", "0", "number", 'min="0" step="0.01"')}${field("tender", "Cash received (PKR)", "0", "number", 'min="0" step="0.01"')}</div><div class="pair total"><span>Total</span><span id="total"></span></div><div class="pair"><span>Change / balance</span><strong id="change"></strong></div><p class="error hidden" id="checkout-error" role="alert"></p><button class="primary" data-action="checkout">${icon("credit-card-white")} Complete sale · F5</button><button data-action="clear-cart">Clear cart</button></div></aside></div>`;
+    node.innerHTML = `<div class="counter"><section><h2>Find a medicine</h2><form id="search-form" class="search"><label class="muted" for="search">Search name, SKU or scan a barcode and press Enter</label><input id="search" placeholder="Search or scan a medicine…" autocomplete="off"></form><div id="medicines"></div></section><aside class="cart" id="current-sale"><h2>Current sale <small id="cart-count"></small></h2>${select("customer", "Customer", [["", "Walk-in customer"], ...partyOptions("Customer")])}<div class="cart-lines" id="cart-lines"></div><div class="payment"><div class="pair"><span>Subtotal</span><strong id="subtotal"></strong></div><div class="two">${field("discount", "Discount (PKR)", "0", "number", 'min="0" step="0.01"')}${field("tender", "Cash received (PKR)", "0", "number", 'min="0" step="0.01"')}</div><div class="pair total"><span>Total</span><span id="total"></span></div><div class="pair"><span>Change / balance</span><strong id="change"></strong></div><p class="error hidden" id="checkout-error" role="alert"></p><button class="primary" data-action="checkout">${icon("credit-card-white")} Complete sale · F5</button><button data-action="clear-cart">Clear cart</button></div></aside></div><a href="#current-sale" id="mobile-cart-link" class="button primary hidden">Review sale</a>`;
     $("#search").oninput = medicineTable;
     $("#search-form").onsubmit = (ev) => {
       ev.preventDefault();
@@ -323,7 +324,7 @@ function medicineTable() {
   $("#medicines").innerHTML = table(
     ["Medicine", "Available", "Price", ""],
     list.map((p) => [
-      `${icon("pill")} <strong>${e(p.name)}</strong><small>${e(p.sku)} · ${e(p.category || "Medicine")}</small>`,
+      `${icon("pill", "pill-icon")} <strong>${e(p.name)}</strong><small>${e(p.sku)} · ${e(p.category || "Medicine")}</small>`,
       `${p.sellable}<small class="${p.sellable <= p.reorder ? "stock-alert" : ""}">${p.sellable <= p.reorder ? "Low stock" : "In stock"}</small>`,
       money(p.price),
       `<button class="primary" data-action="add" data-id="${p.id}" ${p.sellable < 1 ? "disabled" : ""}>+ Add</button>`,
@@ -355,6 +356,8 @@ function addCart(id) {
 function cartView() {
   if (!$("#cart-lines")) return;
   $("#cart-count").textContent = `(${cart.length})`;
+  $("#mobile-cart-link").textContent = `Review sale (${cart.length})`;
+  $("#mobile-cart-link").classList.toggle("hidden", cart.length === 0);
   $("#cart-lines").innerHTML = cart.length
     ? cart
         .map((l) => {

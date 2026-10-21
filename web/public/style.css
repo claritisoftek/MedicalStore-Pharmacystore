@@ -589,3 +589,55 @@ dialog::backdrop {
 .company strong {
   overflow-wrap: anywhere;
 }
+
+#mobile-cart-link {
+  display: none;
+}
+@media (max-width: 760px) {
+  #medicines table {
+    white-space: normal;
+  }
+  #medicines thead {
+    display: none;
+  }
+  #medicines tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px;
+    gap: 6px;
+    align-items: center;
+  }
+  #medicines td {
+    border: 0;
+    padding: 4px;
+  }
+  #medicines td:first-child {
+    grid-column: 1/-1;
+  }
+  #medicines td:nth-child(2)::before {
+    content: "Available: ";
+  }
+  #medicines td:nth-child(3) {
+    text-align: right;
+  }
+  #medicines td:nth-child(4) {
+    grid-column: 1/-1;
+  }
+  #medicines button {
+    width: 100%;
+  }
+  #mobile-cart-link {
+    display: flex;
+    position: fixed;
+    bottom: 15px;
+    right: 16px;
+    z-index: 5;
+    box-shadow: 0 4px 15px #17312444;
+  }
+  .foot {
+    padding-bottom: 80px;
+  }
+  #current-sale {
+    scroll-margin-top: 15px;
+  }
+}

@@ -14,12 +14,27 @@ test("Counter, print receipt, admin forms, responsive layout and logout", async 
   await expect(
     page.getByRole("heading", { name: "A little care. A better day." }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Administration", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Company profile & logo" }).click();
+  await page
+    .getByLabel("Replace logo (PNG / JPEG, max 5 MB)")
+    .setInputFiles("assets/company-default.png");
+  await page.getByLabel("Company name", { exact: true }).fill("Your Pharmacy");
+  await page
+    .getByLabel("Tagline", { exact: true })
+    .fill("Your health, our care");
+  await page.getByRole("button", { name: "Save company profile" }).click();
+  await expect(page.locator("#modal")).not.toBeVisible();
+  await page.getByRole("button", { name: "Counter", exact: true }).click();
   await page.locator("#search").fill("IMPORTED");
   await page.getByRole("button", { name: "+ Add", exact: true }).click();
   await expect(page.locator("#cart-lines")).toContainText("Imported medicine");
   await page.getByLabel("Cash received (PKR)", { exact: true }).fill("100");
   await expect(page.locator("#change")).toContainText("90.00 change");
   await mkdir("web/test-output/screenshots", { recursive: true });
+  await expect(page.locator("#notices")).toHaveText("", { timeout: 8000 });
   await page.screenshot({
     path: "web/test-output/screenshots/counter-desktop.png",
     fullPage: true,
@@ -65,6 +80,7 @@ test("Counter, print receipt, admin forms, responsive layout and logout", async 
   await expect(
     page.getByRole("heading", { name: "Company profile", exact: true }),
   ).toBeVisible();
+  await expect(page.locator("#notices")).toHaveText("", { timeout: 8000 });
   await page.screenshot({
     path: "web/test-output/screenshots/company-profile.png",
   });
@@ -82,6 +98,18 @@ test("Counter, print receipt, admin forms, responsive layout and logout", async 
   await expect(page.locator("#report-result")).toContainText("Sales revenue");
   await page.getByRole("button", { name: "Counter", exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
+  await page
+    .getByRole("button", { name: "+ Add", exact: true })
+    .first()
+    .click();
+  await expect(
+    page.getByRole("link", { name: "Review sale (1)" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Review sale (1)" }).click();
+  await page.getByLabel("Cash received (PKR)", { exact: true }).fill("20");
+  await expect(page.locator("#change")).toContainText("10.00 change");
+
+  await expect(page.locator("#notices")).toHaveText("", { timeout: 8000 });
   await page.screenshot({
     path: "web/test-output/screenshots/counter-mobile.png",
     fullPage: true,
