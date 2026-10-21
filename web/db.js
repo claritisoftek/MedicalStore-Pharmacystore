@@ -46,11 +46,11 @@ export async function initialize(pool) {
     parties:
       "id INT AUTO_INCREMENT PRIMARY KEY, kind ENUM('Customer','Supplier') NOT NULL, name VARCHAR(250) NOT NULL, phone VARCHAR(100) NOT NULL DEFAULT '', address TEXT NOT NULL",
     purchases:
-      "id INT AUTO_INCREMENT PRIMARY KEY, created VARCHAR(30) NOT NULL, supplier_id INT NOT NULL, reference VARCHAR(250) NOT NULL, total BIGINT NOT NULL CHECK(total>=0), paid BIGINT NOT NULL CHECK(paid>=0 AND paid<=total), FOREIGN KEY(supplier_id) REFERENCES parties(id)",
+      "id INT AUTO_INCREMENT PRIMARY KEY, created VARCHAR(30) NOT NULL, supplier_id INT NOT NULL, reference VARCHAR(250) NOT NULL, total BIGINT NOT NULL CHECK(total>=0), paid BIGINT NOT NULL CHECK(paid>=0), CHECK(paid<=total), FOREIGN KEY(supplier_id) REFERENCES parties(id)",
     batches:
       "id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, purchase_id INT, batch VARCHAR(100) NOT NULL, expiry VARCHAR(10) NOT NULL, quantity INT NOT NULL CHECK(quantity>=0), cost BIGINT NOT NULL CHECK(cost>=0), original_quantity INT NOT NULL CHECK(original_quantity>0), FOREIGN KEY(product_id) REFERENCES products(id), FOREIGN KEY(purchase_id) REFERENCES purchases(id), INDEX batch_product(product_id,expiry)",
     sales:
-      "id INT AUTO_INCREMENT PRIMARY KEY, created VARCHAR(30) NOT NULL, user_id INT NOT NULL, customer_id INT, subtotal BIGINT NOT NULL CHECK(subtotal>=0), discount BIGINT NOT NULL CHECK(discount>=0), total BIGINT NOT NULL CHECK(total>=0), paid BIGINT NOT NULL CHECK(paid>=0 AND paid<=total), status ENUM('Posted','Void') NOT NULL DEFAULT 'Posted', FOREIGN KEY(user_id) REFERENCES users(id), FOREIGN KEY(customer_id) REFERENCES parties(id), INDEX sale_created(created)",
+      "id INT AUTO_INCREMENT PRIMARY KEY, created VARCHAR(30) NOT NULL, user_id INT NOT NULL, customer_id INT, subtotal BIGINT NOT NULL CHECK(subtotal>=0), discount BIGINT NOT NULL CHECK(discount>=0), total BIGINT NOT NULL CHECK(total>=0), paid BIGINT NOT NULL CHECK(paid>=0), CHECK(paid<=total), status ENUM('Posted','Void') NOT NULL DEFAULT 'Posted', FOREIGN KEY(user_id) REFERENCES users(id), FOREIGN KEY(customer_id) REFERENCES parties(id), INDEX sale_created(created)",
     sale_lines:
       "id INT AUTO_INCREMENT PRIMARY KEY, sale_id INT NOT NULL, batch_id INT NOT NULL, quantity INT NOT NULL CHECK(quantity>0), price BIGINT NOT NULL CHECK(price>=0), cost BIGINT NOT NULL CHECK(cost>=0), FOREIGN KEY(sale_id) REFERENCES sales(id), FOREIGN KEY(batch_id) REFERENCES batches(id)",
     payments:

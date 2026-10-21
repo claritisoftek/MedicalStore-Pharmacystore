@@ -40,13 +40,22 @@ async function api(path, data) {
         : { "Content-Type": "application/json", "X-CSRF-Token": csrf },
     body: data === undefined ? undefined : JSON.stringify(data),
   });
-  const body = await res.json();
+  let body;
+  try {
+    body = await res.json();
+  } catch {
+    throw Error(
+      "The server response was interrupted. Retry the same checkout.",
+    );
+  }
   if (!res.ok) {
     if (res.status === 401) {
       csrf = "";
       await loginScreen();
     }
-    throw Error(body.error || "Request failed");
+    throw Object.assign(Error(body.error || "Request failed"), {
+      status: res.status,
+    });
   }
   return body;
 }
@@ -435,7 +444,7 @@ async function checkout(button) {
         " Retry this checkout with the same request key if its result is uncertain.";
       target.classList.remove("hidden");
     }
-    if (!/fetch|network|request failed/i.test(err.message)) {
+    if (err.status >= 400 && err.status < 500 && err.status !== 401) {
       pendingSale = null;
       requestKey = null;
     }

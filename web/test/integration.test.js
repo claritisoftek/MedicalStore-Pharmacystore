@@ -388,6 +388,17 @@ test(
         "Invalid restore rolls back; valid restore retains safety backup and signs out",
         async () => {
           const backup = (await request("/api/backup")).body;
+          const totalsBroken = structuredClone(backup);
+          totalsBroken.data.sales[0].total += 1;
+          assert.equal(
+            (
+              await request("/api/restore", {
+                backup: totalsBroken,
+                password: "test-password",
+              })
+            ).res.status,
+            400,
+          );
           const broken = structuredClone(backup);
           broken.data.batches[0].product_id = 999999;
           assert.equal(

@@ -540,7 +540,7 @@ export class Service {
     await w.xlsx.load(buffer);
     const sheet = w.worksheets[0];
     assert(
-      sheet && sheet.rowCount <= 5001,
+      w.worksheets.length === 1 && sheet && sheet.rowCount <= 5001,
       "Use one sheet with at most 5,000 rows",
     );
     const headers = [
@@ -675,6 +675,50 @@ export class Service {
       backup.data.users.some((u) => u.role === "Admin" && u.active === 1),
       "Backup needs an active Admin",
     );
+    for (const u of backup.data.users)
+      assert(
+        /^[a-f0-9]{32}:[a-f0-9]{64}$/.test(u.password),
+        "Invalid account password hash in backup",
+      );
+    for (const b of backup.data.batches)
+      assert(
+        Number.isSafeInteger(b.quantity) &&
+          b.quantity >= 0 &&
+          b.quantity <= b.original_quantity,
+        "Invalid batch quantity in backup",
+      );
+    const saleTotals = new Map(),
+      purchaseTotals = new Map();
+    for (const l of backup.data.sale_lines)
+      saleTotals.set(
+        l.sale_id,
+        (saleTotals.get(l.sale_id) || 0) + l.quantity * l.price,
+      );
+    for (const b of backup.data.batches)
+      if (b.purchase_id !== null)
+        purchaseTotals.set(
+          b.purchase_id,
+          (purchaseTotals.get(b.purchase_id) || 0) +
+            b.original_quantity * b.cost,
+        );
+    for (const s of backup.data.sales) {
+      const subtotal = saleTotals.get(s.id) || 0;
+      assert(
+        Number.isSafeInteger(subtotal) &&
+          subtotal === s.subtotal &&
+          s.total === s.subtotal - s.discount &&
+          s.paid >= 0 &&
+          s.paid <= s.total,
+        "Inconsistent sale totals in backup",
+      );
+    }
+    for (const p of backup.data.purchases) {
+      const total = purchaseTotals.get(p.id) || 0;
+      assert(
+        Number.isSafeInteger(total) && total === p.total,
+        "Inconsistent vendor bill totals in backup",
+      );
+    }
     return this.write(user, async (c) => {
       for (const table of tables) {
         const cols = (await rows(c, `SHOW COLUMNS FROM \`${table}\``))
