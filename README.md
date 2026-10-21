@@ -8,6 +8,10 @@ The repository root now contains a real **Express + MySQL** application with `pa
 
 The web version includes login/roles, counter and FEFO stock allocation, purchases, balances/payments, expenses/reports, opening-stock Excel import, branded browser printing and web backup/restore. It uses a separate MySQL database; it does not synchronize with the desktop SQLite database. It requires internet. No default credentials or sample business records are shipped.
 
+[Web verification and browser screenshots](docs/WEB_VERIFICATION.md)
+
+![Pharmacy Web counter](docs/design/web-counter.png)
+
 ## Windows desktop — 0.2.0
 
 Independent offline pharmacy desktop implementation, prepared for Windows 10/11 x64.

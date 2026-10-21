@@ -72,3 +72,24 @@ The Windows SQLite database and web MySQL database are **separate**. They do not
 
 ## Scope and acceptance limits
 Hosted app requires internet; offline Windows operation remains available in the desktop release. Multi-user browser access shares one pharmacy database (not separate tenants). There is no offline sync, pack conversion, tax/FBR integration, prescription register, partial returns or purchase amendments. Prices are generic PKR amounts. List views show the latest 200 sales, vendor bills and expenses, latest 100 audit events; date-range reports include all matching database records. Physical printers, production Hostinger runtime, clean Windows devices and customer acceptance must be verified after deployment; a GitHub CI result does not claim those checks.
+
+## API map for later changes
+All mutation routes accept JSON; after login they also require the session cookie, exact `APP_URL` Origin and `X-CSRF-Token`. Money sent to the API is a PKR decimal string; stored/returned monetary values are integer paisa. Browser requests use `web/public/app.js`'s `api()` helper. No arbitrary SQL/query endpoint is exposed.
+
+| Routes | Access / purpose |
+| --- | --- |
+| `GET /health`, `GET /api/status` | Public runtime readiness / initial setup status |
+| `POST /api/setup`, `POST /api/login` | Setup token / credentials; rate limited |
+| `GET /api/me`, `POST /api/logout`, `POST /api/password` | Current account and session lifecycle |
+| `GET /api/state` | Role-filtered UI data; no password hashes or session tokens |
+| `POST /api/sales` | Both roles; lines, customer, discount, tender, checkout request key and displayed subtotal |
+| `POST /api/parties` | Both roles for customers; Admin for suppliers |
+| `POST /api/products`, `/api/purchases`, `/api/payments`, `/api/expenses` | Admin business mutations |
+| `POST /api/sales/:id/void` | Admin; complete same-day cancellation only |
+| `GET /api/report`, `/api/statement/:id` | Admin financial reporting |
+| `POST /api/profile`, `/api/users` | Admin branding / account creation |
+| `GET /api/import/template`, `POST /api/import/preview`, `/api/import/apply` | Admin opening-stock workbook flow |
+| `GET /api/backup`, `/api/backup/safety/:id`, `POST /api/restore` | Admin backup/restore; restore rechecks current password |
+| `GET /print/sale/:id`, `/print/purchase/:id`, `/print/statement/:id`, `/print/report/0` | Authenticated escaped documents; Cashier restricted to own sales |
+
+Automated tests use disposable records and are never run against the live customer's database. A source update should pass the web workflow before merging to main. The Windows workflow separately verifies the existing desktop deliverable.
