@@ -1,0 +1,62 @@
+name: Build and release Windows installer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-release:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+      - name: Install installer compiler
+        shell: powershell
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
+          }
+      - name: Test and build standalone Windows installer
+        shell: powershell
+        run: ./packaging/build-windows.ps1
+      - name: Test installed application and uninstaller
+        shell: powershell
+        run: ./packaging/test-installer.ps1
+      - name: Assemble release packages and checksums
+        shell: powershell
+        run: ./packaging/package-release.ps1
+      - name: Retain build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PharmacyDesktop-Windows-build-evidence
+          path: |
+            build/*smoke.json
+            build/test-results.txt
+            build/build-provenance.json
+            release/*
+          if-no-files-found: warn
+      - name: Publish v0.1.0 release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh release view v0.1.0 --repo "$env:GITHUB_REPOSITORY" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw 'v0.1.0 already exists. Use a new version for a new release; published assets are never overwritten automatically.'
+          }
+          $assets = @(Get-ChildItem release -File | ForEach-Object { $_.FullName })
+          gh release create v0.1.0 @assets --repo "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --title 'Pharmacy Desktop v0.1.0 — Windows x64' --notes-file docs/RELEASE_NOTES.md --latest
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub release publication failed' }

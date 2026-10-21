@@ -1,0 +1,27 @@
+test_backup_restore_safety_and_reauthentication (test_workflows.Workflows.test_backup_restore_safety_and_reauthentication) ... ok
+test_cashier_permissions (test_workflows.Workflows.test_cashier_permissions) ... ok
+test_earliest_expiry_and_duplicate_cart_lines (test_workflows.Workflows.test_earliest_expiry_and_duplicate_cart_lines) ... ok
+test_empty_database_no_samples (test_workflows.Workflows.test_empty_database_no_samples) ... ok
+test_excel_conflicting_barcode_transaction_rollback (test_workflows.Workflows.test_excel_conflicting_barcode_transaction_rollback) ... ok
+test_excel_errors_no_partial_import (test_workflows.Workflows.test_excel_errors_no_partial_import) ... ok
+test_excel_formulas_rejected (test_workflows.Workflows.test_excel_formulas_rejected) ... ok
+test_excel_valid_preview_apply_and_duplicate (test_workflows.Workflows.test_excel_valid_preview_apply_and_duplicate) ... ok
+test_expired_purchase_and_invalid_discount_blocked (test_workflows.Workflows.test_expired_purchase_and_invalid_discount_blocked) ... ok
+test_expired_stock_blocked (test_workflows.Workflows.test_expired_stock_blocked) ... ok
+test_full_purchase_sale_balances_and_profit (test_workflows.Workflows.test_full_purchase_sale_balances_and_profit) ... ok
+test_historical_void_blocked (test_workflows.Workflows.test_historical_void_blocked) ... ok
+test_invalid_restore_leaves_current_database (test_workflows.Workflows.test_invalid_restore_leaves_current_database) ... ok
+test_money_exact (test_workflows.Workflows.test_money_exact) ... ok
+test_password_change_and_failed_login_clears_session (test_workflows.Workflows.test_password_change_and_failed_login_clears_session) ... ok
+test_pdf_all_sizes (test_workflows.Workflows.test_pdf_all_sizes) ... ok
+test_purchase_atomic_failure_and_reference_required (test_workflows.Workflows.test_purchase_atomic_failure_and_reference_required) ... ok
+test_sale_rollback_when_later_line_fails (test_workflows.Workflows.test_sale_rollback_when_later_line_fails) ... ok
+test_supplier_overpayment_rejected (test_workflows.Workflows.test_supplier_overpayment_rejected) ... ok
+test_void_after_balance_receipt_blocked (test_workflows.Workflows.test_void_after_balance_receipt_blocked) ... ok
+test_void_reverses_stock_and_credit_once (test_workflows.Workflows.test_void_reverses_stock_and_credit_once) ... ok
+test_walk_in_cannot_have_credit_or_overpay (test_workflows.Workflows.test_walk_in_cannot_have_credit_or_overpay) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 5.111s
+
+OK
