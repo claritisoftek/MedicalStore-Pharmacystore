@@ -23,6 +23,8 @@ def configure(root):
     style.map('TButton',background=[('active',SAGE),('pressed',SAGE)],bordercolor=[('focus',GREEN)])
     style.configure('Primary.TButton',background=GREEN,foreground=WHITE,font=(family,11,'bold'),padding=(18,13),bordercolor=GREEN,lightcolor=GREEN,darkcolor=GREEN)
     style.map('Primary.TButton',background=[('active','#1A4430'),('pressed','#163A29'),('disabled','#879A8B')],foreground=[('disabled','#E5EAE5')])
+    style.configure('Compact.Primary.TButton',padding=(16,8))
+    style.configure('Compact.TButton',padding=(10,4))
     style.configure('TEntry',padding=(9,8),fieldbackground=WHITE,foreground=INK,bordercolor=LINE,lightcolor=LINE,darkcolor=LINE)
     style.configure('Amount.TEntry',padding=(8,3))
     style.map('TEntry',bordercolor=[('focus',GREEN)],lightcolor=[('focus',GREEN)],darkcolor=[('focus',GREEN)])

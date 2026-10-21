@@ -81,9 +81,9 @@ class App(tk.Tk):
         def save(): callback({k:v.get() for k,v in values.items()}); d.destroy()
         ttk.Button(content,text='Save',command=self.safe(save)).pack(pady=10)
         return d
-    def table(self,parent,columns):
+    def table(self,parent,columns,height=7):
         wrap=ttk.Frame(parent); wrap.pack(fill='both',expand=True,padx=8,pady=4)
-        tree=ttk.Treeview(wrap,columns=columns,show='headings',selectmode='browse')
+        tree=ttk.Treeview(wrap,columns=columns,show='headings',selectmode='browse',height=height)
         for col in columns: tree.heading(col,text=col); tree.column(col,width=130,minwidth=65,stretch=True)
         ys=ttk.Scrollbar(wrap,orient='vertical',command=tree.yview); xs=ttk.Scrollbar(wrap,orient='horizontal',command=tree.xview)
         tree.configure(yscrollcommand=ys.set,xscrollcommand=xs.set); tree.grid(row=0,column=0,sticky='nsew'); ys.grid(row=0,column=1,sticky='ns'); xs.grid(row=1,column=0,sticky='ew'); wrap.rowconfigure(0,weight=1); wrap.columnconfigure(0,weight=1)
@@ -196,7 +196,7 @@ class App(tk.Tk):
         self.amount_row(payment,'Change (PKR)',self.change_var,bold=True)
         self.payment_error_label=ttk.Label(payment,textvariable=self.payment_error,foreground=theme.AMBER,wraplength=360)
         self.complete_button=ttk.Button(payment,text='Complete sale     F5',image=self.image('icons/credit-card-white.png'),compound='left',style='Primary.TButton',command=self.safe(self.checkout)); self.complete_button.pack(fill='x',pady=(6,4))
-        ttk.Button(payment,text='Clear cart',image=self.image('icons/trash.png'),compound='left',command=self.safe(self.cart_clear)).pack(fill='x',pady=(3,0))
+        self.clear_button=ttk.Button(payment,text='Clear cart',image=self.image('icons/trash.png'),compound='left',command=self.safe(self.cart_clear)); self.clear_button.pack(fill='x',pady=(3,0))
         headings=ttk.Frame(right); headings.pack(fill='x',pady=(0,8)); ttk.Label(headings,text='Medicine',font=(self.font_family,10,'bold')).pack(side='left'); ttk.Label(headings,text='Quantity / line total',style='Muted.TLabel').pack(side='right')
         holder=ttk.Frame(right); holder.pack(fill='both',expand=True)
         self.cart_canvas=tk.Canvas(holder,background=theme.BG,highlightthickness=0,width=380,height=160)
@@ -205,10 +205,25 @@ class App(tk.Tk):
         self.cart_lines=ttk.Frame(self.cart_canvas); self.cart_window=self.cart_canvas.create_window((0,0),window=self.cart_lines,anchor='nw')
         self.cart_lines.bind('<Configure>',lambda e:self.cart_canvas.configure(scrollregion=self.cart_canvas.bbox('all')))
         self.cart_canvas.bind('<Configure>',lambda e:self.cart_canvas.itemconfigure(self.cart_window,width=e.width))
-        self.cart_canvas.bind('<MouseWheel>',lambda e:self.cart_canvas.yview_scroll(-int(e.delta/120),'units'))
+        self.bind('<MouseWheel>',self.cart_wheel)
         self.cart_total=0
         for var in (self.discount_var,self.tender_var): var.trace_add('write',lambda *a:self.refresh_payment())
+        self._compact_counter=None; right.bind('<Configure>',lambda e:self.fit_counter())
         self.counter_search(); self.refresh_cart()
+    def fit_counter(self):
+        compact=self.winfo_height()<800
+        if compact==self._compact_counter: return
+        self._compact_counter=compact
+        self.complete_button.configure(style='Compact.Primary.TButton' if compact else 'Primary.TButton')
+        self.clear_button.configure(style='Compact.TButton' if compact else 'TButton')
+    def cart_wheel(self,event):
+        if self.current_page!='Counter' or not self.cart_canvas.winfo_exists(): return
+        widget=event.widget
+        while widget is not None:
+            if widget==self.cart_canvas:
+                if event.delta: self.cart_canvas.yview_scroll((-1 if event.delta>0 else 1)*max(1,abs(event.delta)//120),'units')
+                return 'break'
+            widget=getattr(widget,'master',None)
     def amount_row(self,parent,label,var,entry=False,bold=False):
         row=ttk.Frame(parent); row.pack(fill='x',pady=3)
         ttk.Label(row,text=label,font=(self.font_family,11,'bold' if bold else 'normal')).pack(side='left')
@@ -381,9 +396,9 @@ class App(tk.Tk):
         self.heading(self.tabs['Purchases'],'Supplier purchases','Receive batches and keep vendor bills together.')
         f=self.tabs['Purchases']; bar=ttk.Frame(f); bar.pack(fill='x')
         self.button(bar,'Add batch to vendor bill',self.purchase_line_form); self.button(bar,'Remove batch',self.purchase_line_remove); self.button(bar,'Save vendor bill',self.purchase_checkout)
-        self.purchase_cart_tree=self.table(f,['Line','Product ID','Batch','Expiry','Quantity','Cost PKR'])
+        self.purchase_cart_tree=self.table(f,['Line','Product ID','Batch','Expiry','Quantity','Cost PKR'],height=3)
         bar2=ttk.Frame(f); bar2.pack(fill='x'); self.button(bar2,'Refresh saved bills',self.refresh_purchases); self.button(bar2,'Print vendor bill',lambda:self.print_dialog(*reports.vendor_bill(self.store,int(self.selected(self.purchase_tree)[0])),'A4'))
-        self.purchase_tree=self.table(f,['ID','Date','Supplier','Vendor reference','Total PKR','Paid PKR']); self.refresh_purchases()
+        self.purchase_tree=self.table(f,['ID','Date','Supplier','Vendor reference','Total PKR','Paid PKR'],height=3); self.refresh_purchases()
     def purchase_line_form(self):
         def save(v):
             line=dict(product_id=self.pickid(v['product']),batch=v['batch'],expiry=v['expiry'],quantity=integer(v['quantity'],1),cost=v['cost']); money(line['cost'])
@@ -431,6 +446,7 @@ class App(tk.Tk):
         canvas=tk.Canvas(shell,background=theme.BG,highlightthickness=0)
         scroll=ttk.Scrollbar(shell,orient='vertical',command=canvas.yview); scroll.pack(side='right',fill='y'); canvas.configure(yscrollcommand=scroll.set); canvas.pack(side='left',fill='both',expand=True)
         content=ttk.Frame(canvas,padding=24); window=canvas.create_window((0,0),window=content,anchor='nw')
+        d.bind('<MouseWheel>',lambda e:canvas.yview_scroll(-1 if e.delta>0 else 1,'units'))
         canvas.bind('<Configure>',lambda e:canvas.itemconfigure(window,width=e.width)); content.bind('<Configure>',lambda e:canvas.configure(scrollregion=canvas.bbox('all')))
         ttk.Label(content,text='Company profile',font=(self.font_family,23,'bold'),foreground=theme.GREEN).pack(anchor='w')
         ttk.Label(content,text='Update your identity anytime. Changes apply to new printouts.',style='Muted.TLabel').pack(anchor='w',pady=(6,18))

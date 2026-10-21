@@ -1,6 +1,6 @@
 # Release acceptance checklist
 
-Release: 0.1.0 | Tester: __________ | Windows version: __________ | Build hash: __________
+Release: 0.2.0 | Tester: __________ | Windows version: __________ | Build hash: __________
 
 The source handover has NOT passed the Windows/device checks below. Complete on Windows 10 and Windows 11 x64 before customer delivery. Use disposable data.
 
@@ -12,6 +12,12 @@ The source handover has NOT passed the Windows/device checks below. Complete on 
 - [ ] No default credentials or demonstration medicines are present.
 - [ ] Closing and relaunching retains credentials/data; a second app instance is rejected.
 - [ ] Uninstall/reinstall preserves data; upgrade with unchanged AppId preserves it.
+
+## Company identity
+- [ ] Admin can replace/remove logo and save company name/tagline/contact details.
+- [ ] Cancel does not save a draft; saving a profile retains the current cart.
+- [ ] Logo is present in PDFs/printouts and survives backup/restore.
+- [ ] Capsule app, executable, installer and desktop shortcut icons display correctly.
 
 ## Catalogue, import, purchase and stock
 - [ ] Create a medicine and preserve barcode leading zeros.

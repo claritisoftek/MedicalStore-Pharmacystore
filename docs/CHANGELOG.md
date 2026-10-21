@@ -10,6 +10,7 @@
 - Stored normalized logo inside existing settings table so backup/restore and v0.1.0 compatibility require no schema migration.
 - Added eight branding regression tests, native interaction/screenshot checks, frozen company-profile/asset checks and source visual comparison.
 - Visual iterations corrected missing font fallback, footer reservation, medicine-row icon spacing, Add affordances and minimum-viewport cart visibility.
+- Native Windows preview caught insufficient minimum-height cart space; added compact payment buttons, cart wheel support and robust failed-test database cleanup. Generic table heights now preserve both purchase lists in smaller windows.
 - Kept AppId, install path and data location stable for upgrade. Bumped software, installer and release to 0.2.0; v0.1.0 assets remain untouched.
 - Updated user/developer/build/branding/upgrade/design-QA documentation and release evidence packaging.
 
