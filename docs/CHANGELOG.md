@@ -68,3 +68,5 @@ Changed browser welcome, navigation identity, page title and loading text from d
 ### 2026-10-24 — Excel import compatibility
 
 Reproduced a TypeError in ExcelJS when workbook elements use prefixed SpreadsheetML namespaces. Added namespace-aware XML normalization using saxes and JSZip before parsing, preserving cell text and qualified attributes. Rejects DTDs and archives larger than 50 MB expanded. Invalid/unreadable XLSX files now return a clear validation message. The customer workbook validated all 148 rows locally without writing production inventory. Regression tests cover prefixed workbook XML, escaped text and damaged files; all 18 database/unit/startup tests and build syntax checks passed. Customer workbook contents are not stored in the repository.
+
+Request-parser dependency patched after npm audit identified GHSA-27r3-jxmh-p828. All 18 checks passed again; dependency audit reports zero vulnerabilities.
