@@ -28,6 +28,88 @@ test("Counter, print receipt, admin forms, responsive layout and logout", async 
   await page.getByRole("button", { name: "Save company profile" }).click();
   await expect(page.locator("#modal")).not.toBeVisible();
   await page.getByRole("button", { name: "Counter", exact: true }).click();
+  // Keyboard entry, quantities, exact cash, validation and long-name layout.
+  await page.locator("#search").fill("IMPORTED");
+  await page.locator("#search").press("Tab");
+  await expect(page.getByLabel(/Add quantity for Imported/)).toBeFocused();
+  await page.getByLabel(/Add quantity for Imported/).fill("2");
+  await page.getByLabel(/Add quantity for Imported/).press("Enter");
+  await expect(page.locator("#search")).toBeFocused();
+  await expect(page.locator("#total")).toContainText("20.00");
+  await expect(
+    page.getByRole("button", { name: "Complete sale" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Exact cash", exact: true }).click();
+  await expect(page.locator("#change")).toContainText("0.00 change");
+  await expect(
+    page.getByRole("button", { name: "Complete sale" }),
+  ).toBeEnabled();
+  await page.getByLabel("Discount (PKR)", { exact: true }).fill("99999");
+  await expect(page.locator("#total")).toHaveText("—");
+  await expect(
+    page.getByRole("button", { name: "Complete sale" }),
+  ).toBeDisabled();
+  await page.getByLabel("Discount (PKR)", { exact: true }).fill("0");
+  await page.getByRole("button", { name: "Clear cart", exact: true }).click();
+  await page.getByRole("button", { name: "Stock", exact: true }).click();
+  await page
+    .getByLabel("Search stock (name, SKU, barcode, brand)")
+    .fill("IMPORTED");
+  await expect(page.locator("#stock-results")).toContainText("1 medicines");
+  await page.getByRole("button", { name: "Batches", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: /Batches:/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "Batches", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Edit", exact: true }).click();
+  await expect(page.getByLabel("Brand / manufacturer")).toHaveAttribute(
+    "required",
+    "",
+  );
+  await expect(
+    page.getByLabel("Prescription required", { exact: true }),
+  ).toHaveAttribute("required", "");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Customers", exact: true }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+  await expect(
+    page.getByRole("dialog", { name: "Edit customer" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Reports", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Generate report", exact: true })
+    .click();
+  await expect(page.locator("#report-result")).toContainText("Report:");
+  await page.getByLabel("From", { exact: true }).fill("2099-12-31");
+  await expect(page.locator("#report-result")).toContainText("Dates changed");
+  await expect(
+    page.getByRole("link", { name: "Print A4 / Save PDF" }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Generate report", exact: true })
+    .click();
+  await expect(page.locator("#report-result")).toContainText(
+    "From date must be",
+  );
+  await page
+    .getByRole("button", { name: "Administration", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Add team member", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Add team member" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", { name: "Manager", exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("option", { name: "IT", exact: true }),
+  ).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Counter", exact: true }).click();
   await page.locator("#search").fill("IMPORTED");
   await page.getByRole("button", { name: "+ Add", exact: true }).click();
   await expect(page.locator("#cart-lines")).toContainText("Imported medicine");
@@ -39,6 +121,12 @@ test("Counter, print receipt, admin forms, responsive layout and logout", async 
     path: "web/test-output/screenshots/counter-desktop.png",
     fullPage: true,
   });
+  for (const b of await page
+    .getByRole("button", { name: "+ Add", exact: true })
+    .all()) {
+    const box = await b.boundingBox();
+    expect(box.x + box.width).toBeLessThanOrEqual(1440);
+  }
   const beforeSales = (await (await page.request.get("/api/state")).json())
     .sales.length;
   let interrupted = false;
@@ -112,6 +200,22 @@ test("Counter, print receipt, admin forms, responsive layout and logout", async 
   await expect(page.locator("#notices")).toHaveText("", { timeout: 8000 });
   await page.screenshot({
     path: "web/test-output/screenshots/counter-mobile.png",
+    fullPage: true,
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  await page.getByRole("button", { name: "Stock", exact: true }).click();
+  await page
+    .getByLabel("Search stock (name, SKU, barcode, brand)")
+    .fill("IMPORTED");
+  await expect(
+    page.getByRole("button", { name: "Edit", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "web/test-output/screenshots/stock-mobile.png",
     fullPage: true,
   });
   expect(

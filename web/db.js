@@ -74,9 +74,97 @@ export async function initialize(pool) {
     );
   await pool.query("INSERT IGNORE INTO web_meta VALUES(1,1)");
   await pool.query("INSERT IGNORE INTO web_lock VALUES(1)");
-  if (
-    (await rows(pool, "SELECT version FROM web_meta WHERE id=1"))[0].version !==
-    1
-  )
-    throw new Error("Unsupported web database version");
+  // Serialize additive migrations across simultaneous Node workers.
+  const connection = await pool.getConnection();
+  try {
+    const [locks] = await connection.query(
+      "SELECT GET_LOCK('pharmacy_web_schema',30) acquired",
+    );
+    if (!locks[0].acquired)
+      throw new Error("Database migration is busy; restart shortly");
+    const [before] = await rows(
+      connection,
+      "SELECT version FROM web_meta WHERE id=1",
+    );
+    if (![1, 2].includes(before.version))
+      throw new Error("Unsupported web database version");
+    if (before.version === 1) {
+      await connection.beginTransaction();
+      try {
+        await rows(connection, "SELECT id FROM web_lock WHERE id=1 FOR UPDATE");
+        const data = {};
+        for (const table of [
+          "users",
+          "settings",
+          "products",
+          "parties",
+          "purchases",
+          "batches",
+          "sales",
+          "sale_lines",
+          "payments",
+          "expenses",
+          "audit",
+          "imports",
+        ])
+          data[table] = await rows(connection, `SELECT * FROM \`${table}\``);
+        if (data.users.length || data.products.length || data.parties.length) {
+          const created = new Date().toISOString();
+          await rows(
+            connection,
+            "INSERT INTO web_backups(created,content) VALUES(?,?)",
+            [
+              created,
+              JSON.stringify({
+                format: "pharmacy-web",
+                version: 1,
+                created,
+                data,
+              }),
+            ],
+          );
+        }
+        await connection.commit();
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      }
+    }
+    const columns = async (table) =>
+      (await rows(connection, `SHOW COLUMNS FROM \`${table}\``)).map(
+        (x) => x.Field,
+      );
+    const pc = await columns("products");
+    for (const [name, definition] of Object.entries({
+      brand: "VARCHAR(250) NOT NULL DEFAULT ''",
+      prescription: "TINYINT NULL",
+      variant: "VARCHAR(250) NOT NULL DEFAULT ''",
+    }))
+      if (!pc.includes(name))
+        await connection.query(
+          `ALTER TABLE products ADD COLUMN \`${name}\` ${definition}`,
+        );
+    if (!(await columns("parties")).includes("active"))
+      await connection.query(
+        "ALTER TABLE parties ADD COLUMN active TINYINT NOT NULL DEFAULT 1",
+      );
+    const [role] = await rows(
+      connection,
+      "SHOW COLUMNS FROM users LIKE 'role'",
+    );
+    if (!role.Type.includes("Manager"))
+      await connection.query(
+        "ALTER TABLE users MODIFY role ENUM('Admin','Cashier','Manager','IT') NOT NULL",
+      );
+    const [meta] = await rows(
+      connection,
+      "SELECT version FROM web_meta WHERE id=1",
+    );
+    if (![1, 2].includes(meta.version))
+      throw new Error("Unsupported web database version");
+    await connection.query("UPDATE web_meta SET version=2 WHERE id=1");
+  } finally {
+    await connection.query("SELECT RELEASE_LOCK('pharmacy_web_schema')");
+    connection.release();
+  }
 }

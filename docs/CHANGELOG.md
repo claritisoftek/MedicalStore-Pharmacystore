@@ -70,3 +70,8 @@ Changed browser welcome, navigation identity, page title and loading text from d
 Reproduced a TypeError in ExcelJS when workbook elements use prefixed SpreadsheetML namespaces. Added namespace-aware XML normalization using saxes and JSZip before parsing, preserving cell text and qualified attributes. Rejects DTDs and archives larger than 50 MB expanded. Invalid/unreadable XLSX files now return a clear validation message. The customer workbook validated all 148 rows locally without writing production inventory. Regression tests cover prefixed workbook XML, escaped text and damaged files; all 18 database/unit/startup tests and build syntax checks passed. Customer workbook contents are not stored in the repository.
 
 Request-parser dependency patched after npm audit identified GHSA-27r3-jxmh-p828. All 18 checks passed again; dependency audit reports zero vulnerabilities.
+
+
+## Pharmacy Web 1.1.0 — 2026-10-24
+
+Implemented agreed issues #1–#12: cash/keyboard counter, wrapping, mandatory product metadata and Excel template, party correction/archive/restore, Manager/IT permissions, team lifecycle and session revocation, stock filters/batches/paging/mobile cards, amount validation, dated report clearing, named dialogs, readable PKT timestamps/user audit references. Additive schema migration and version 1 backup compatibility preserve old records. See PRODUCTION_1_1.md for implementation, permissions, recovery and tests.

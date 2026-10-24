@@ -1,3 +1,5 @@
+> Web release 1.1: [Production changes and maintenance guide](docs/PRODUCTION_1_1.md).
+
 # Pharmacy — Web and Windows desktop
 
 ## Hostinger browser application

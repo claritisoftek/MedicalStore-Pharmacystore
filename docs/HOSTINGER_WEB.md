@@ -1,3 +1,7 @@
+# Current release: Pharmacy Web 1.1
+
+See [PRODUCTION_1_1.md](PRODUCTION_1_1.md) for the current role matrix, product fields, import format, lifecycle actions and migration procedure; it supersedes older two-role examples below.
+
 # Pharmacy Web — Hostinger deployment and operation
 
 ## What changed
@@ -67,7 +71,7 @@ The Windows SQLite database and web MySQL database are **separate**. They do not
 - Browser templates escape business text. Logos are size/pixel-limited, decoded, resized and re-encoded as PNG; external logo URLs/SVG uploads are not accepted.
 - Run one application instance for in-memory login rate-limit consistency; sessions and accounting transactions themselves are database-backed. Add a shared rate-limit store before scaling to multiple independent instances.
 - Keep pinned dependencies and lockfile; run `npm ci`, `npm run build`, `npm test`, `npm audit`. Run full tests with a dedicated MySQL database name ending `_test` and `RUN_DB_TESTS=1`. Tests erase that test database's application tables, never run against production.
-- Database schema version is `web_meta.version=1`; future changes need explicit tested migrations. Existing installations are never auto-reset.
+- Database schema version is `web_meta.version=2`; version 1 is upgraded additively with a safety snapshot. See [production 1.1 changes](PRODUCTION_1_1.md) for current roles, fields, migration and compatibility details. Future changes need explicit tested migrations. Existing installations are never auto-reset.
 - `web/service.js`: business transaction logic. `web/db.js`: schema and connection boundary. `server.js`: authentication, routes and deployment entry. `web/public/`: responsive UI/print controls. `web/printing.js`: escaped documents. `web/test/`: Node tests. `web/browser/`: browser acceptance checks. `.github/workflows/test-web.yml`: MySQL integration and browser CI.
 
 ## Scope and acceptance limits

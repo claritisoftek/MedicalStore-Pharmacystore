@@ -74,6 +74,9 @@ test("Excel validation rejects formulas and expired inventory", async () => {
     "expiry",
     "quantity",
     "cost",
+    "brand",
+    "prescription",
+    "variant",
   ]);
   sheet.addRow([
     "A",
@@ -86,6 +89,9 @@ test("Excel validation rejects formulas and expired inventory", async () => {
     "2099-12-31",
     10,
     8,
+    "Test brand",
+    "no",
+    "",
   ]);
   let buffer = Buffer.from(await book.xlsx.writeBuffer());
   assert.equal((await service.importRows(buffer)).length, 1);
@@ -126,6 +132,9 @@ test("Excel import accepts prefixed SpreadsheetML and reports unreadable files",
     "expiry",
     "quantity",
     "cost",
+    "brand",
+    "prescription",
+    "variant",
   ]);
   sheet.addRow([
     "PREFIX",
@@ -138,6 +147,9 @@ test("Excel import accepts prefixed SpreadsheetML and reports unreadable files",
     "2099-12-31",
     10,
     8,
+    "Test brand",
+    "no",
+    "",
   ]);
   const zip = await JSZip.loadAsync(await book.xlsx.writeBuffer());
   const original = await zip.file("xl/workbook.xml").async("string");

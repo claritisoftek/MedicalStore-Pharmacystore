@@ -641,3 +641,89 @@ dialog::backdrop {
     scroll-margin-top: 15px;
   }
 }
+
+/* Keep product names readable while reserving space for payment and actions. */
+table {
+  white-space: normal;
+}
+td,
+th {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+td:first-child {
+  max-width: 340px;
+}
+#medicines table {
+  table-layout: fixed;
+}
+#medicines th:nth-child(1) {
+  width: 42%;
+}
+#medicines th:nth-child(2) {
+  width: 15%;
+}
+#medicines th:nth-child(3) {
+  width: 17%;
+}
+#medicines th:nth-child(4) {
+  width: 26%;
+}
+#medicines td,
+#medicines th {
+  padding: 12px 7px;
+}
+.search-add {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.search-add input {
+  padding: 7px;
+}
+.search-add button {
+  padding: 8px;
+}
+.selected-result {
+  background: #edf3e7;
+}
+.cart-line {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.cart-line > div {
+  min-width: 0;
+}
+#payment-validation {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  #stock-results table,
+  #stock-results tbody,
+  #stock-results tr,
+  #stock-results td {
+    display: block;
+    width: 100%;
+    max-width: none;
+  }
+  #stock-results thead {
+    display: none;
+  }
+  #stock-results tr {
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  #stock-results td {
+    padding: 5px;
+    border: 0;
+  }
+  #stock-results td:not(:first-child)::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+  }
+  .search-add {
+    flex-direction: row;
+  }
+  .search-add input {
+    width: 80px;
+  }
+}

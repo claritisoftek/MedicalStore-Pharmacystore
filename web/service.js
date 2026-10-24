@@ -93,6 +93,11 @@ export const tables = [
   "audit",
   "imports",
 ];
+export function prescription(value) {
+  if (value === 1 || /^(yes|true|1)$/i.test(String(value))) return 1;
+  if (value === 0 || /^(no|false|0)$/i.test(String(value))) return 0;
+  assert(false, "Select prescription required: Yes or No");
+}
 export class Service {
   constructor(pool) {
     this.pool = pool;
@@ -171,8 +176,14 @@ export class Service {
         text(v.category || "", 100),
         money(v.price),
         integer(v.reorder ?? 5),
+        text(v.brand || ""),
+        prescription(v.prescription),
+        text(v.variant || ""),
       ];
-      assert(a[0] && a[1], "SKU and name required");
+      assert(
+        a[0] && a[1] && a[6],
+        "SKU, name and brand/manufacturer are required",
+      );
       let id = v.id ? integer(v.id, 1) : null;
       if (id) {
         assert(
@@ -181,14 +192,14 @@ export class Service {
         );
         await rows(
           db,
-          "UPDATE products SET sku=?,name=?,barcode=?,category=?,price=?,reorder=? WHERE id=?",
+          "UPDATE products SET sku=?,name=?,barcode=?,category=?,price=?,reorder=?,brand=?,prescription=?,variant=? WHERE id=?",
           [...a, id],
         );
       } else
         id = (
           await rows(
             db,
-            "INSERT INTO products(sku,name,barcode,category,price,reorder) VALUES(?,?,?,?,?,?)",
+            "INSERT INTO products(sku,name,barcode,category,price,reorder,brand,prescription,variant) VALUES(?,?,?,?,?,?,?,?,?)",
             a,
           )
         ).insertId;
@@ -200,7 +211,8 @@ export class Service {
   async party(user, v) {
     assert(["Customer", "Supplier"].includes(v.kind), "Invalid party type");
     assert(
-      user.role === "Admin" || v.kind === "Customer",
+      ["Admin", "Manager"].includes(user.role) ||
+        (user.role === "Cashier" && v.kind === "Customer"),
       "Admin access required",
     );
     const name = text(v.name);
@@ -215,13 +227,102 @@ export class Service {
       return r.insertId;
     });
   }
+  async updateParty(user, id, v) {
+    return this.write(user, async (c) => {
+      const [p] = await rows(c, "SELECT * FROM parties WHERE id=?", [
+        integer(id, 1),
+      ]);
+      assert(p, "Unknown customer or supplier");
+      assert(
+        ["Admin", "Manager"].includes(user.role) ||
+          (user.role === "Cashier" &&
+            p.kind === "Customer" &&
+            v.active === undefined),
+        "Permission denied",
+      );
+      if (v.active !== undefined) {
+        assert(v.active === 0 || v.active === 1, "Invalid archive status");
+        await rows(c, "UPDATE parties SET active=? WHERE id=?", [
+          v.active,
+          p.id,
+        ]);
+        await this.audit(
+          c,
+          user,
+          v.active ? "Restore party" : "Archive party",
+          `${p.kind} #${p.id} ${p.name}`,
+        );
+      } else {
+        const name = text(v.name);
+        assert(name, "Name required");
+        await rows(
+          c,
+          "UPDATE parties SET name=?,phone=?,address=? WHERE id=?",
+          [name, text(v.phone || "", 100), text(v.address || "", 1000), p.id],
+        );
+        await this.audit(c, user, "Edit party", `${p.kind} #${p.id} ${name}`);
+      }
+    });
+  }
+  async updateUser(user, id, v) {
+    return this.write(user, async (c) => {
+      const [target] = await rows(c, "SELECT * FROM users WHERE id=?", [
+        integer(id, 1),
+      ]);
+      assert(target, "Unknown account");
+      assert(
+        ["Admin", "IT"].includes(user.role),
+        "Account management access required",
+      );
+      assert(
+        ["Admin", "Cashier", "Manager", "IT"].includes(v.role),
+        "Invalid role",
+      );
+      assert(v.active === 0 || v.active === 1, "Invalid active status");
+      assert(
+        user.role === "Admin" ||
+          (target.role !== "Admin" && v.role !== "Admin"),
+        "Only Admin can manage Admin access",
+      );
+      const name = text(v.username, 100);
+      assert(name, "Username required");
+      if (
+        target.role === "Admin" &&
+        target.active &&
+        (v.role !== "Admin" || !v.active)
+      ) {
+        const admins = await rows(
+          c,
+          "SELECT id FROM users WHERE role='Admin' AND active=1",
+        );
+        assert(
+          admins.length > 1,
+          "The last active Admin cannot be deactivated or demoted",
+        );
+      }
+      await rows(c, "UPDATE users SET username=?,role=?,active=? WHERE id=?", [
+        name,
+        v.role,
+        v.active,
+        target.id,
+      ]);
+      await rows(c, "DELETE FROM web_sessions WHERE user_id=?", [target.id]);
+      await this.audit(
+        c,
+        user,
+        "Update account",
+        `${target.username} (#${target.id}): ${target.role}/${target.active} to ${name} ${v.role}/${v.active}; sessions revoked`,
+      );
+    });
+  }
   async checkParty(c, id, kind) {
     assert(
       (
-        await rows(c, "SELECT id FROM parties WHERE id=? AND kind=?", [
-          integer(id, 1),
-          kind,
-        ])
+        await rows(
+          c,
+          "SELECT id FROM parties WHERE id=? AND kind=? AND active=1",
+          [integer(id, 1), kind],
+        )
       ).length,
       kind + " required",
     );
@@ -344,7 +445,10 @@ export class Service {
       assert(discount <= subtotal, "Discount exceeds subtotal");
       const total = subtotal - discount,
         paid = Math.min(tender, total);
-      assert(customer || paid === total, "Select a customer for a credit sale");
+      assert(
+        customer || paid === total,
+        "Enter cash received for this walk-in sale, or select a customer to record a credit balance",
+      );
       const id = (
         await rows(
           c,
@@ -567,6 +671,9 @@ export class Service {
       "expiry",
       "quantity",
       "cost",
+      "brand",
+      "prescription",
+      "variant",
     ];
     assert(
       headers.every(
@@ -600,6 +707,9 @@ export class Service {
       text(item.barcode, 100);
       text(item.category, 100);
       text(item.batch, 100);
+      assert(text(item.brand), "Brand/manufacturer required at row " + n);
+      item.prescription = prescription(item.prescription);
+      text(item.variant);
       money(item.price);
       money(item.cost);
       integer(item.reorder);
@@ -630,7 +740,10 @@ export class Service {
               p.price === money(v.price) &&
               (p.barcode || "") === v.barcode &&
               p.category === v.category &&
-              p.reorder === integer(v.reorder),
+              p.reorder === integer(v.reorder) &&
+              p.brand === v.brand &&
+              p.prescription === v.prescription &&
+              p.variant === v.variant,
             "Existing medicine differs from workbook: " + v.sku,
           );
         } else pid = await this.product(user, v, c);
@@ -660,7 +773,7 @@ export class Service {
     const data = {};
     for (const table of tables)
       data[table] = await rows(c, `SELECT * FROM \`${table}\``);
-    return { format: "pharmacy-web", version: 1, created: now(), data };
+    return { format: "pharmacy-web", version: 2, created: now(), data };
   }
   async backup(user) {
     return this.write(user, async (c) => {
@@ -675,9 +788,18 @@ export class Service {
     ]);
     assert(verify(password, u.password), "Current password required");
     assert(
-      backup?.format === "pharmacy-web" && backup.version === 1 && backup.data,
+      backup?.format === "pharmacy-web" &&
+        [1, 2].includes(backup.version) &&
+        backup.data,
       "Unsupported web backup",
     );
+    // Version 1 backups predate product metadata and party archive flags.
+    backup = structuredClone(backup);
+    if (backup.version === 1) {
+      for (const p of backup.data.products || [])
+        Object.assign(p, { brand: "", prescription: null, variant: "" });
+      for (const p of backup.data.parties || []) p.active = 1;
+    }
     for (const table of tables)
       assert(
         Array.isArray(backup.data[table]) &&

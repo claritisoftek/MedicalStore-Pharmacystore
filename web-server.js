@@ -140,6 +140,18 @@ export async function createApp(pool, env = process.env) {
     req.user.role === "Admin"
       ? next()
       : res.status(403).json({ error: "Admin access required" });
+  const business = (req, res, next) =>
+    ["Admin", "Manager"].includes(req.user.role)
+      ? next()
+      : res.status(403).json({ error: "Manager access required" });
+  const technical = (req, res, next) =>
+    ["Admin", "IT"].includes(req.user.role)
+      ? next()
+      : res.status(403).json({ error: "IT access required" });
+  const counter = (req, res, next) =>
+    ["Admin", "Manager", "Cashier"].includes(req.user.role)
+      ? next()
+      : res.status(403).json({ error: "Counter access required" });
   app.get("/api/me", (req, res) =>
     res.json({ user: req.user, csrf: req.session.csrf }),
   );
@@ -167,19 +179,28 @@ export async function createApp(pool, env = process.env) {
     res.json({ ok: true });
   });
   app.get("/api/state", async (req, res) => {
-    const isAdmin = req.user.role === "Admin";
+    const isAdmin = ["Admin", "Manager"].includes(req.user.role);
+    const isIT = ["Admin", "IT"].includes(req.user.role);
     const [products, parties, profile, sales] = await Promise.all([
-      svc.inventory(),
-      svc.parties(),
+      req.user.role === "IT" ? [] : svc.inventory(),
+      req.user.role === "IT" ? [] : svc.parties(),
       rows(pool, "SELECT * FROM settings"),
-      rows(
-        pool,
-        `SELECT s.*,p.name customer FROM sales s LEFT JOIN parties p ON p.id=s.customer_id ${isAdmin ? "" : "WHERE s.user_id=?"} ORDER BY s.id DESC LIMIT 200`,
-        isAdmin ? [] : [req.user.id],
-      ),
+      req.user.role === "IT"
+        ? []
+        : rows(
+            pool,
+            `SELECT s.*,p.name customer FROM sales s LEFT JOIN parties p ON p.id=s.customer_id ${isAdmin ? "" : "WHERE s.user_id=?"} ORDER BY s.id DESC LIMIT 200`,
+            isAdmin ? [] : [req.user.id],
+          ),
     ]);
     res.json({
       user: req.user,
+      permissions: {
+        business: isAdmin,
+        technical: isIT,
+        counter: req.user.role !== "IT",
+        restore: req.user.role === "Admin",
+      },
       today: day(),
       products,
       parties: parties.filter((p) => isAdmin || p.kind === "Customer"),
@@ -199,13 +220,17 @@ export async function createApp(pool, env = process.env) {
               pool,
               "SELECT * FROM expenses ORDER BY id DESC LIMIT 200",
             ),
+          }
+        : {}),
+      ...(isIT
+        ? {
             users: await rows(
               pool,
               "SELECT id,username,role,active FROM users",
             ),
             audit: await rows(
               pool,
-              "SELECT * FROM audit ORDER BY id DESC LIMIT 100",
+              "SELECT a.*,u.username FROM audit a LEFT JOIN users u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 100",
             ),
             safetyBackups: await rows(
               pool,
@@ -215,34 +240,34 @@ export async function createApp(pool, env = process.env) {
         : {}),
     });
   });
-  app.post("/api/products", admin, async (req, res) =>
+  app.post("/api/products", business, async (req, res) =>
     res.json({ id: await svc.product(req.user, req.body) }),
   );
-  app.post("/api/parties", async (req, res) =>
+  app.post("/api/parties", counter, async (req, res) =>
     res.json({ id: await svc.party(req.user, req.body) }),
   );
-  app.post("/api/purchases", admin, async (req, res) =>
+  app.post("/api/purchases", business, async (req, res) =>
     res.json({ id: await svc.purchase(req.user, req.body) }),
   );
-  app.post("/api/sales", async (req, res) =>
+  app.post("/api/sales", counter, async (req, res) =>
     res.json({ id: await svc.sell(req.user, req.body) }),
   );
-  app.post("/api/sales/:id/void", admin, async (req, res) => {
+  app.post("/api/sales/:id/void", business, async (req, res) => {
     await svc.void(req.user, req.params.id);
     res.json({ ok: true });
   });
-  app.post("/api/payments", admin, async (req, res) => {
+  app.post("/api/payments", business, async (req, res) => {
     await svc.payment(req.user, req.body);
     res.json({ ok: true });
   });
-  app.post("/api/expenses", admin, async (req, res) => {
+  app.post("/api/expenses", business, async (req, res) => {
     await svc.expense(req.user, req.body);
     res.json({ ok: true });
   });
-  app.get("/api/report", admin, async (req, res) =>
+  app.get("/api/report", business, async (req, res) =>
     res.json(await svc.report(String(req.query.from), String(req.query.to))),
   );
-  app.get("/api/statement/:id", admin, async (req, res) => {
+  app.get("/api/statement/:id", business, async (req, res) => {
     const id = Number(req.params.id);
     await svc.balance(pool, id);
     const [p] = await rows(pool, "SELECT * FROM parties WHERE id=?", [id]);
@@ -261,16 +286,20 @@ export async function createApp(pool, env = process.env) {
       ),
     });
   });
-  app.post("/api/profile", admin, async (req, res) => {
+  app.post("/api/profile", technical, async (req, res) => {
     await svc.profile(req.user, req.body);
     res.json({ ok: true });
   });
-  app.post("/api/users", admin, async (req, res) => {
+  app.post("/api/users", technical, async (req, res) => {
     const name = text(req.body.username, 100),
       role = req.body.role;
     assert(
-      name && ["Admin", "Cashier"].includes(role),
+      name && ["Admin", "Cashier", "Manager", "IT"].includes(role),
       "Username and role required",
+    );
+    assert(
+      req.user.role === "Admin" || role !== "Admin",
+      "Only Admin can create Admin accounts",
     );
     const hash = passwordHash(req.body.password);
     await svc.write(req.user, async (c) => {
@@ -283,6 +312,14 @@ export async function createApp(pool, env = process.env) {
     });
     res.json({ ok: true });
   });
+  app.post("/api/users/:id", technical, async (req, res) => {
+    await svc.updateUser(req.user, req.params.id, req.body);
+    res.json({ ok: true });
+  });
+  app.post("/api/parties/:id", counter, async (req, res) => {
+    await svc.updateParty(req.user, req.params.id, req.body);
+    res.json({ ok: true });
+  });
   const workbook = (req) => {
     assert(
       typeof req.body.file === "string" && req.body.file.length < 7e6,
@@ -290,14 +327,14 @@ export async function createApp(pool, env = process.env) {
     );
     return Buffer.from(req.body.file, "base64");
   };
-  app.post("/api/import/preview", admin, async (req, res) => {
+  app.post("/api/import/preview", business, async (req, res) => {
     const data = await svc.importRows(workbook(req));
     res.json({ rows: data.length, preview: data.slice(0, 50) });
   });
-  app.post("/api/import/apply", admin, async (req, res) =>
+  app.post("/api/import/apply", business, async (req, res) =>
     res.json({ rows: await svc.import(req.user, workbook(req)) }),
   );
-  app.get("/api/import/template", admin, async (req, res) => {
+  app.get("/api/import/template", business, async (req, res) => {
     const { default: ExcelJS } = await import("exceljs");
     const w = new ExcelJS.Workbook(),
       s = w.addWorksheet("Opening inventory");
@@ -312,18 +349,21 @@ export async function createApp(pool, env = process.env) {
       "expiry",
       "quantity",
       "cost",
+      "brand",
+      "prescription",
+      "variant",
     ]);
     s.columns.forEach((c) => (c.width = 22));
     s.getRow(1).font = { bold: true };
     res.attachment("Opening-inventory.xlsx");
     res.send(Buffer.from(await w.xlsx.writeBuffer()));
   });
-  app.get("/api/backup", admin, async (req, res) =>
+  app.get("/api/backup", technical, async (req, res) =>
     res
       .attachment(`Pharmacy-Web-${day()}.json`)
       .json(await svc.backup(req.user)),
   );
-  app.get("/api/backup/safety/:id", admin, async (req, res) => {
+  app.get("/api/backup/safety/:id", technical, async (req, res) => {
     const [b] = await rows(pool, "SELECT content FROM web_backups WHERE id=?", [
       Number(req.params.id),
     ]);
@@ -345,7 +385,7 @@ export async function createApp(pool, env = process.env) {
       ["sale", "purchase", "statement", "report"].includes(kind),
       "Unknown document",
     );
-    if (kind !== "sale" && req.user.role !== "Admin")
+    if (kind !== "sale" && !["Admin", "Manager"].includes(req.user.role))
       return res.sendStatus(403);
     const profile = Object.fromEntries(
       (await rows(pool, "SELECT * FROM settings")).map((p) => [p.key, p.value]),
@@ -377,7 +417,10 @@ export async function createApp(pool, env = process.env) {
         [id],
       );
       assert(sale, "Receipt not found");
-      if (req.user.role !== "Admin" && sale.user_id !== req.user.id)
+      if (
+        !["Admin", "Manager"].includes(req.user.role) &&
+        sale.user_id !== req.user.id
+      )
         return res.sendStatus(403);
       data = {
         ...sale,
@@ -421,30 +464,29 @@ export async function createApp(pool, env = process.env) {
   app.use((req, res) => res.status(404).json({ error: "Page not found" }));
   app.use((err, req, res, next) => {
     if (err.code === "ER_DUP_ENTRY")
-      return res
-        .status(409)
-        .json({
-          error:
-            "A record with this SKU, barcode, username or import already exists",
-        });
+      return res.status(409).json({
+        error:
+          "A record with this SKU, barcode, username or import already exists",
+      });
     if (err.type === "entity.too.large")
       return res.status(413).json({ error: "Upload too large" });
     if (err.status && err.status < 500)
       return res.status(err.status).json({ error: err.message });
     console.error("Request failed:", err.code || err.name);
-    res
-      .status(500)
-      .json({
-        error:
-          "The request could not be completed. No partial transaction was saved. Check server logs.",
-      });
+    res.status(500).json({
+      error:
+        "The request could not be completed. No partial transaction was saved. Check server logs.",
+    });
   });
   return app;
 }
 export async function start() {
   // Hostinger may load the entry directly instead of invoking npm start.
-  try { process.loadEnvFile(join(root, ".env")); }
-  catch (error) { if (error.code !== "ENOENT") throw error; }
+  try {
+    process.loadEnvFile(join(root, ".env"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
   let pool;
   try {
     pool = createPool();

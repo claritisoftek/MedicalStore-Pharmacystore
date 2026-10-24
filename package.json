@@ -1,6 +1,6 @@
 {
   "name": "pharmacy-web",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Hostinger-ready Express and MySQL pharmacy application",
   "type": "module",
@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "build": "node --check server.js && node --check web-server.js && node --check web/service.js && node --check web/public/app.js",
-    "test": "node --test --test-timeout=60000 web/test/*.test.js",
+    "test": "node --test --test-concurrency=1 --test-timeout=60000 web/test/*.test.js",
     "test:browser": "playwright test --config web/playwright.config.js",
     "format": "prettier --write server.js \"web/**/*.js\" \"web/public/*.css\" web/public/index.html"
   },
