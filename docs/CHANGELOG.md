@@ -63,3 +63,8 @@ The first Windows build passed 22 tests, frozen and installed application smoke 
 ### 2026-10-24 — Pharmacy wording and setup guidance
 
 Changed browser welcome, navigation identity, page title and loading text from dispensary to pharmacy. First Admin setup now explains the Hostinger SETUP_TOKEN, chosen login credentials, minimum 10-character password and later stock import. No database or authentication behavior changed. Verified JavaScript syntax with npm run build.
+
+
+### 2026-10-24 — Excel import compatibility
+
+Reproduced a TypeError in ExcelJS when workbook elements use prefixed SpreadsheetML namespaces. Added namespace-aware XML normalization using saxes and JSZip before parsing, preserving cell text and qualified attributes. Rejects DTDs and archives larger than 50 MB expanded. Invalid/unreadable XLSX files now return a clear validation message. The customer workbook validated all 148 rows locally without writing production inventory. Regression tests cover prefixed workbook XML, escaped text and damaged files; all 18 database/unit/startup tests and build syntax checks passed. Customer workbook contents are not stored in the repository.

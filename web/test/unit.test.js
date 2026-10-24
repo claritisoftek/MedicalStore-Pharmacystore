@@ -108,3 +108,63 @@ test("Logo uploads cannot disguise SVG as PNG", async () => {
     /Only actual PNG/,
   );
 });
+
+test("Excel import accepts prefixed SpreadsheetML and reports unreadable files", async () => {
+  const { default: JSZip } = await import("jszip");
+  const { normalizeSpreadsheetXml } = await import("../workbook.js");
+  const service = new Service(null),
+    book = new ExcelJS.Workbook();
+  const sheet = book.addWorksheet("Opening");
+  sheet.addRow([
+    "sku",
+    "name",
+    "barcode",
+    "category",
+    "price",
+    "reorder",
+    "batch",
+    "expiry",
+    "quantity",
+    "cost",
+  ]);
+  sheet.addRow([
+    "PREFIX",
+    "Medicine & <care>",
+    "",
+    "Medicine",
+    12.5,
+    5,
+    "B",
+    "2099-12-31",
+    10,
+    8,
+  ]);
+  const zip = await JSZip.loadAsync(await book.xlsx.writeBuffer());
+  const original = await zip.file("xl/workbook.xml").async("string");
+  zip.file(
+    "xl/workbook.xml",
+    original
+      .replace(
+        /xmlns="http:\/\/schemas.openxmlformats.org\/spreadsheetml\/2006\/main"/,
+        'xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"',
+      )
+      .replace(
+        /<(\/?)(workbook|fileVersion|workbookPr|workbookProtection|bookViews|workbookView|sheets|sheet|definedNames|definedName|calcPr)(?=[\s/>])/g,
+        "<$1x:$2",
+      ),
+  );
+  const list = await service.importRows(
+    await zip.generateAsync({ type: "nodebuffer" }),
+  );
+  assert.equal(list.length, 1);
+  assert.equal(list[0].name, "Medicine & <care>");
+  assert.equal(list[0].quantity, "10");
+  await assert.rejects(
+    service.importRows(Buffer.from("invalid file")),
+    /Cannot read this Excel workbook/,
+  );
+  assert.throws(
+    () => normalizeSpreadsheetXml("<!DOCTYPE root><root/>"),
+    /Document types/,
+  );
+});

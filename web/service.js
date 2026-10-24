@@ -6,6 +6,7 @@ import {
 } from "node:crypto";
 import { rows, tx } from "./db.js";
 import ExcelJS from "exceljs";
+import { compatibleWorkbook } from "./workbook.js";
 import sharp from "sharp";
 export const day = () =>
   new Intl.DateTimeFormat("en-CA", {
@@ -542,7 +543,14 @@ export class Service {
   async importRows(buffer) {
     assert(buffer.length <= 5 * 1024 * 1024, "Workbook exceeds 5 MB");
     const w = new ExcelJS.Workbook();
-    await w.xlsx.load(buffer);
+    try {
+      await w.xlsx.load(await compatibleWorkbook(buffer));
+    } catch {
+      assert(
+        false,
+        "Cannot read this Excel workbook. Save it as an Excel Workbook (.xlsx) and upload it again. Password-protected or damaged files are not supported.",
+      );
+    }
     const sheet = w.worksheets[0];
     assert(
       w.worksheets.length === 1 && sheet && sheet.rowCount <= 5001,
