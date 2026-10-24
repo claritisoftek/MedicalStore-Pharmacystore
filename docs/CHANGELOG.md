@@ -58,3 +58,8 @@ Published to the customer-selected `claritisoftek/MedicalStore-Pharmacystore` re
 
 ### Windows release check correction
 The first Windows build passed 22 tests, frozen and installed application smoke checks, installer compilation and uninstallation. Publication failed because Windows PowerShell treated the expected `gh release view` "release not found" stderr as terminating. Moved release probing/publication into a Python subprocess wrapper, preserving refusal to overwrite an existing release and distinguishing authentication/API errors from an absent release.
+
+
+### 2026-10-24 — Pharmacy wording and setup guidance
+
+Changed browser welcome, navigation identity, page title and loading text from dispensary to pharmacy. First Admin setup now explains the Hostinger SETUP_TOKEN, chosen login credentials, minimum 10-character password and later stock import. No database or authentication behavior changed. Verified JavaScript syntax with npm run build.
