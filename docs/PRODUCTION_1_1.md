@@ -31,7 +31,7 @@ A private JSON safety snapshot is stored in `web_backups` before upgrading a pop
 9. Discount above subtotal, negative amounts and amounts with more than two decimals prevent checkout. Impossible negative totals/change are not rendered. Uncertain network outcomes keep the same frozen checkout payload and retry key; the operator sees a safe plain-language retry message. Confirmed validation errors allow correction.
 10. Report results carry their generated date range and PKT label. Editing dates immediately clears results/print links; reversed dates show an error. Out-of-order successful requests cannot overwrite newer results.
 11. All native dialogs use their visible heading as the accessible name. Native Escape and focus restoration are retained.
-12. History shows readable Pakistan time with original values retained in title text. Audit rows show usernames and meaningful references; business users can navigate reference links when permitted.
+12. History shows readable Pakistan time with original values retained in expandable details. Audit rows show usernames and meaningful references; business users can navigate reference links when permitted.
 
 ## Excel template
 

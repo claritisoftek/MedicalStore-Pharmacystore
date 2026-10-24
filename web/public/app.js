@@ -33,7 +33,7 @@ function timestamp(value) {
   const raw = String(value),
     date = new Date(/(?:Z|[+-]\d\d:\d\d)$/.test(raw) ? raw : raw + "+05:00");
   if (Number.isNaN(date.getTime())) return e(raw);
-  return `<time title="${e(raw)}">${e(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }).format(date))} PKT</time>`;
+  return `<details class="timestamp"><summary>${e(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Karachi", dateStyle: "medium", timeStyle: "short" }).format(date))} PKT</summary><code>${e(raw)}</code></details>`;
 }
 function roleOptions() {
   return [
@@ -182,7 +182,7 @@ function field(name, label, value = "", type = "text", extra = "") {
   return `<label>${e(label)}<input name="${e(name)}" type="${type}" value="${e(value)}" ${extra}></label>`;
 }
 function select(name, label, options, value = "") {
-  return `<label>${e(label)}<select name="${name}">${options.map(([v, l]) => `<option value="${e(v)}" ${String(v) === String(value) ? "selected" : ""}>${e(l)}</option>`).join("")}</select></label>`;
+  return `<label>${e(label)}<select name="${name}" aria-label="${e(label)}">${options.map(([v, l]) => `<option value="${e(v)}" ${String(v) === String(value) ? "selected" : ""}>${e(l)}</option>`).join("")}</select></label>`;
 }
 const productOptions = () =>
   state.products.map((p) => [p.id, `${p.name} · ${p.sku}`]);
@@ -459,7 +459,7 @@ function renderPage() {
           ? `<button data-action="edit-user" data-id="${u.id}">Manage</button>`
           : "Admin managed",
       ]),
-    )}<h2>Safety backups before restore</h2>${table(
+    )}<h2>Safety backups before changes</h2>${table(
       ["Date", ""],
       state.safetyBackups.map((b) => [
         timestamp(b.created),
@@ -584,6 +584,10 @@ function totals() {
   const total = error ? null : subtotal - discount;
   if (!error && cart.length && !$("[name=customer]").value && tender < total)
     error = "Enter cash received for this walk-in sale, or use Exact cash.";
+  for (const control of document.querySelectorAll(
+    "[name=discount],[name=tender],[name=customer],[data-action=exact-cash]",
+  ))
+    control.disabled = !!pendingSale;
   $("#subtotal").textContent = money(subtotal);
   $("#total").textContent = total === null ? "—" : money(total);
   $("#change").textContent =

@@ -378,7 +378,7 @@ export async function createApp(pool, env = process.env) {
     res.clearCookie("pharmacy_session", { path: "/" });
     res.json({ ok: true });
   });
-  app.get("/print/:kind/:id", async (req, res) => {
+  app.get("/print/:kind/:id", counter, async (req, res) => {
     const kind = req.params.kind,
       id = Number(req.params.id);
     assert(
