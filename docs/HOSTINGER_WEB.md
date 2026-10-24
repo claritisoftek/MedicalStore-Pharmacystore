@@ -93,3 +93,8 @@ All mutation routes accept JSON; after login they also require the session cooki
 | `GET /print/sale/:id`, `/print/purchase/:id`, `/print/statement/:id`, `/print/report/0` | Authenticated escaped documents; Cashier restricted to own sales |
 
 Automated tests use disposable records and are never run against the live customer's database. A source update should pass the web workflow before merging to main. The Windows workflow separately verifies the existing desktop deliverable.
+
+
+## Hostinger LiteSpeed startup compatibility (2026-10-24)
+
+Hostinger runtime logs confirmed `ERR_REQUIRE_ASYNC_MODULE`: its LiteSpeed launcher requires the entry file rather than executing the npm start command. `server.js` is now a minimal dynamic-import entry, with no top-level await or direct-execution guard. It starts `web-server.js` asynchronously under either launcher. The application factory remains importable without opening a listener for tests. Startup loads an optional root `.env` file without replacing platform environment variables. Keep the Hostinger entry file set to `server.js`. A successful syntax build alone does not verify startup; check runtime logs and `/health` after deployment.

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createPool, initialize, rows } from "../db.js";
-import { createApp } from "../../server.js";
+import { createApp } from "../../web-server.js";
 import { Service, day, tables } from "../service.js";
 import ExcelJS from "exceljs";
 import { randomUUID } from "node:crypto";
