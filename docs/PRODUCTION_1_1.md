@@ -46,3 +46,11 @@ Prescription accepts Yes/No (also true/false or 1/0). Brand must be nonblank. Va
 Technology remains Express, vanilla browser JS/CSS, mysql2/InnoDB, ExcelJS with namespace normalization, and Playwright. New helpers are in `web/public/app.js`; shared input validation and customer/account writes are in `web/service.js`; permissions/routes in `web-server.js`; migrations in `web/db.js`. No new runtime dependencies.
 
 Local checks cover database migration/idempotency, metadata, archive/restore, vendor payments, independent Cashier/Manager/IT sessions, last Admin protection, session invalidation, transactions, FEFO, duplicate prevention, restore and startup. Browser checks cover search quantity keyboard flow, cash/discount validation, stale reports, accessible dialogs, stock search/batches, required form fields and desktop/mobile layout. CI runs against MySQL 8.4 with Node 22 and Chromium before production promotion. Physical printer/scanner hardware and a complete screen-reader assessment remain customer acceptance checks.
+
+## Verified release evidence
+
+Runtime commit: `8b1a6aef0451553921654132933cf53e77de4448`.
+
+GitHub Actions run [40098623145](https://github.com/claritisoftek/MedicalStore-Pharmacystore/actions/runs/40098623145), job `120885998042`: all steps succeeded on Node 22 / MySQL 8.4, including 21 Node/database/startup checks, clean production dependency audit, and the expanded Chromium workflow. The workflow exercised a long medicine name, 2-unit keyboard entry, exact cash, excessive discount rejection, invalid report dates, labelled prescription selector, named dialogs and focus return, stock batch details/search, role options, interrupted successful checkout retry, receipt access, and 390px phone stock layout. No page script errors occurred. The artifact `12561952392` retains four reviewed screenshots plus the test log. SHA256: `69d7bee17d4c7f84e0afb2fade7527364e912cf0eca056f67216148b15c6169b`.
+
+The initial browser run caught an ambiguous prescription-selector accessible name. Explicit labels were added and the full workflow passed on the runtime commit above. Desktop and phone-stock screenshots were visually reviewed before promotion. These fixtures use a disposable test database; they do not represent customer transactions. Final promotion includes documentation-only additions over the verified runtime commit.
